@@ -1,0 +1,125 @@
+$schema: "http://json-schema.org/draft-07/schema#"
+title: "rdk-7 build configuration"
+
+type: object
+properties:
+  build:
+    type: object
+    required:
+      - "target"
+      - "branch"
+      - "machine"
+      - "shared-dir"
+      - "workspace-dir"
+    additionalproperties: true
+    properties:
+      target:
+        type: string
+        minlength: 1
+
+      branch:
+        $ref: "#/definitions/branch"
+
+      machine:
+        $ref: "#/definitions/machine"
+
+      shared-dir:
+        type: string
+        minlength: 1
+
+      workspace-dir:
+        type: string
+        minlength: 1
+
+  repository:
+    type: object
+    required:
+      - "base-url"
+      - "type"
+    additionalproperties: false
+    properties:
+      base-url:
+        type: string
+        minlength: 1
+      type:
+        type: string
+        enum: ["remote", "local"]
+
+  layers:
+    type: object
+    required:
+      - "oss"
+      - "vendor"
+      - "middleware"
+      - "application"
+      - "image-assembler"
+    additionalproperties: false
+    properties:
+      oss:
+        $ref: "#/definitions/layer"
+      vendor:
+        $ref: "#/definitions/layer"
+      middleware:
+        $ref: "#/definitions/layer"
+      application:
+        $ref: "#/definitions/layer"
+      image-assembler:
+        $ref: "#/definitions/layer"
+
+required:
+  - "build"
+  - "repository"
+  - "layers"
+
+additionalproperties: false
+
+definitions:
+  branch:
+    type: object
+    properties:
+      manifest:
+        type: string
+        minlength: 1
+      oss:
+        type: string
+        minlength: 1
+    required:
+      - "manifest"
+      - "oss"
+    additionalproperties: false
+
+  layer:
+    type: object
+    properties:
+      build-command:
+        type: string
+        description: "command to build the layer"
+        minlength: 1
+      manifest:
+        type: string
+        description: "url of the manifest file for this layer"
+        minlength: 1
+      repository-type:
+        type: string
+        description: "repository type for this layer (local or remote)"
+        enum: ["local", "remote"]
+    required:
+      - "build-command"
+      - "manifest"
+    additionalproperties: false
+
+  machine:
+    type: object
+    properties:
+      arch:
+        type: string
+        description: "generic architecture of the machine (used to build oss layer)"
+        minlength: 1
+      model:
+        type: string
+        description: "vendor-specific model of the machine (used to build other layers)"
+        minlength: 1
+    required:
+      - "arch"
+      - "model"
+    additionalproperties: false

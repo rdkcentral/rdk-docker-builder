@@ -1,0 +1,45 @@
+# Copyright 2025 RDK Management
+# SPDX-License-Identifier: Apache-2.0
+
+# RDK-7 Build Configuration
+# Build settings
+build:
+  target: "raspberrypi"
+
+  branch:
+    manifest: "RDK7-1.0.0"
+    oss: "4.6.2-community"
+
+  machine:
+    arch: "rdk-arm64"
+    model: "raspberrypi4-64-rdke"
+  
+  shared-dir: "${HOME}/community_shared"
+  workspace-dir: "/workspace"
+
+# Repository configuration
+repository:
+  base-url: "https://repo.solution57.com"
+  type: "remote"  # Options: "remote" or "local"
+
+# Layer-specific configurations
+layers:
+  oss:
+    build-command: "bitbake lib32-packagegroup-oss-layer"
+    manifest: "https://github.com/rdkcentral/rdke-oss-manifest/rdk-arm.xml"
+  
+  vendor:
+    build-command: "bitbake lib32-packagegroup-vendor-layer"
+    manifest: "https://github.com/rdkcentral/vendor-manifest-raspberrypi/rdke-raspberrypi.xml"
+  
+  middleware:
+    build-command: "bitbake lib32-packagegroup-middleware-layer"
+    manifest: "https://github.com/rdkcentral/middleware-manifest-rdke/raspberrypi4-64.xml"
+  
+  application:
+    build-command: "bitbake lib32-packagegroup-application-layer"
+    manifest: "https://github.com/rdkcentral/application-manifest-rdke/raspberrypi4-64.xml"
+  
+  image-assembler:
+    build-command: "bitbake lib32-rdk-fullstack-image"
+    manifest: "https://github.com/rdkcentral/image-assembler-manifest-rdke/raspberrypi4-64.xml"
