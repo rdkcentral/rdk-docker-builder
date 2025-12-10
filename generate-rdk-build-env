@@ -2,7 +2,7 @@
 # Copyright 2025 RDK Management
 # SPDX-License-Identifier: Apache-2.0
 """
-RDK-7 Setup Script - Generate RDK build environment from YAML configuration
+RDK Setup Script - Generate RDK build environment from YAML configuration
 
 Build environment setup is written to stdout.
 """
@@ -141,7 +141,7 @@ def parse_layer_repos(layer_repos_str: str) -> "dict[str, str]":
 def create_argument_parser() -> argparse.ArgumentParser:
     """Create and configure argument parser."""
     parser = argparse.ArgumentParser(
-        description="RDK-7 Setup Script - Generate RDK build environment from YAML configuration",
+        description="RDK Setup Script - Generate RDK build environment from YAML configuration",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog=f"""
 Examples:
@@ -187,7 +187,7 @@ Dependencies:
     )
 
     parser.add_argument(
-        "--version", action="version", version="RDK-7 Setup Script 1.0.0"
+        "--version", action="version", version="RDK Setup Script 1.0.0"
     )
 
     return parser
