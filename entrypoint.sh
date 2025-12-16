@@ -257,7 +257,7 @@ EOF
     local package_build_status=0
 
     if [ -z "$package_name" ]; then
-        print_error "No package name provided for layer: $layer_name"
+        print_error "No package name configured for layer: $layer_name. Check get_layer_config function."
         package_build_status=1
     else
         print_info "Building $layer_name packages..."
