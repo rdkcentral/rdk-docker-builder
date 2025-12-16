@@ -34,7 +34,7 @@ RUN mkdir -p /opt/bin && \
     curl -o /opt/bin/repo https://storage.googleapis.com/git-repo-downloads/repo && \
     chmod a+x /opt/bin/repo
 
-RUN mkdir -p /workspace && chown $USERNAME:$USERNAME /workspace
+RUN mkdir -p /home/rdk/workspace && chown $USERNAME:$USERNAME /home/rdk/workspace
 
 RUN python3.8 -m pip install --upgrade pip setuptools wheel
 RUN python3.8 -m pip install pyyaml requests jinja2 markupsafe
@@ -42,7 +42,7 @@ RUN python3.8 -m pip install pyyaml requests jinja2 markupsafe
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
 
-WORKDIR /workspace
+WORKDIR /home/rdk/workspace
 USER $USERNAME
 ENV PATH="/opt/bin:$PATH"
 

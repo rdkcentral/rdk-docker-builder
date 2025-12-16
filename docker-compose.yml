@@ -3,19 +3,19 @@
 version: '3.8'
 
 services:
-  rdk7-builder:
+  rdk-target-builder:
     build:
       context: .
       args:
         USER_ID: ${USER_ID:-1000}
         GROUP_ID: ${GROUP_ID:-1000}
         USERNAME: ${USERNAME:-rdk}
-    image: rdk7-builder:latest
-    container_name: rdk7-builder
-    working_dir: /workspace
+    image: rdk-target-builder:latest
+    container_name: rdk-target-builder
+    working_dir: /home/rdk/workspace
     user: "${USER_ID:-1000}:${GROUP_ID:-1000}"
     volumes:
-      - .:/workspace
+      - .:/home/rdk/workspace
       - ~/.ssh:/home/rdk/.ssh:ro
       - ~/.gitconfig:/home/rdk/.gitconfig:ro
       - ~/.netrc:/home/rdk/.netrc:ro
@@ -30,19 +30,19 @@ services:
     profiles:
       - interactive
 
-  rdk7-setup:
+  rdk-target-setup:
     build:
       context: .
       args:
         USER_ID: ${USER_ID:-1000}
         GROUP_ID: ${GROUP_ID:-1000}
         USERNAME: ${USERNAME:-rdk}
-    image: rdk7-builder:latest
-    container_name: rdk7-setup
-    working_dir: /workspace
+    image: rdk-target-builder:latest
+    container_name: rdk-target-setup
+    working_dir: /home/rdk/workspace
     user: "${USER_ID:-1000}:${GROUP_ID:-1000}"
     volumes:
-      - .:/workspace
+      - .:/home/rdk/workspace
       - ~/.ssh:/home/rdk/.ssh:ro
       - ~/.gitconfig:/home/rdk/.gitconfig:ro
       - ~/.netrc:/home/rdk/.netrc:ro
@@ -50,19 +50,19 @@ services:
     profiles:
       - setup
 
-  rdk7-build:
+  rdk-target-build:
     build:
       context: .
       args:
         USER_ID: ${USER_ID:-1000}
         GROUP_ID: ${GROUP_ID:-1000}
         USERNAME: ${USERNAME:-rdk}
-    image: rdk7-builder:latest
-    container_name: rdk7-build
-    working_dir: /workspace
+    image: rdk-target-builder:latest
+    container_name: rdk-target-build
+    working_dir: /home/rdk/workspace
     user: "${USER_ID:-1000}:${GROUP_ID:-1000}"
     volumes:
-      - .:/workspace
+      - .:/home/rdk/workspace
       - ~/.ssh:/home/rdk/.ssh:ro
       - ~/.gitconfig:/home/rdk/.gitconfig:ro
       - ~/.netrc:/home/rdk/.netrc:ro
@@ -76,19 +76,19 @@ services:
     profiles:
       - build
 
-  rdk7-shell:
+  rdk-target-shell:
     build:
       context: .
       args:
         USER_ID: ${USER_ID:-1000}
         GROUP_ID: ${GROUP_ID:-1000}
         USERNAME: ${USERNAME:-rdk}
-    image: rdk7-builder:latest
-    container_name: rdk7-shell
-    working_dir: /workspace
+    image: rdk-target-builder:latest
+    container_name: rdk-target-shell
+    working_dir: /home/rdk/workspace
     user: "${USER_ID:-1000}:${GROUP_ID:-1000}"
     volumes:
-      - .:/workspace
+      - .:/home/rdk/workspace
       - ~/.ssh:/home/rdk/.ssh:ro
       - ~/.gitconfig:/home/rdk/.gitconfig:ro
       - ~/.netrc:/home/rdk/.netrc:ro

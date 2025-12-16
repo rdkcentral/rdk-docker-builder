@@ -11,8 +11,8 @@ NC='\033[0m'
 
 DEFAULT_TARGET="raspberrypi"
 DEFAULT_LAYER="oss"
-IMAGE_NAME="rdk7-builder"
-CONTAINER_NAME="rdk7-builder"
+IMAGE_NAME="rdk-target-builder"
+CONTAINER_NAME="rdk-target-builder"
 
 # CLI variables
 HEADLESS=false
@@ -52,22 +52,9 @@ get_input() {
     eval "$var_name='$input'"
 }
 
-
-
-print_disclaimer() {
-    echo -e "${YELLOW}============================================================================${NC}"
-    echo -e "${YELLOW}DISCLAIMER: This is NOT an official RDK script.${NC}"
-    echo -e "${YELLOW}This is a community-contributed tool for building RDK-7 layers in Docker.${NC}"
-    echo -e "${YELLOW}Use at your own risk. For official RDK documentation and tools, visit:${NC}"
-    echo -e "${YELLOW}https://wiki.rdkcentral.com${NC}"
-    echo -e "${YELLOW}============================================================================${NC}"
-    echo
-}
-
 show_usage() {
-    print_disclaimer
     cat << EOF
-RDK-7 Docker Builder (Unofficial Community Tool)
+RDK Docker Builder (Unofficial Community Tool)
 
 Usage: $0 [OPTIONS] <command>
 
@@ -97,8 +84,7 @@ EOF
 }
 
 create_container() {
-    print_disclaimer
-    print_info "Building RDK-7 Docker image with user mapping..."
+    print_info "Building RDK Docker image with user mapping..."
     
     local user_id=$(id -u)
     local group_id=$(id -g)
@@ -112,25 +98,30 @@ create_container() {
     print_success "Docker image built: $IMAGE_NAME"
 }
 
-
 # Helper function to check if local IPK directory exists and has content
 check_local_ipk_available() {
     local layer=$1
     local ipk_path=""
-    
+
     # Read config to get the shared directory path
     local shared_dir=$(grep "shared-dir:" config.yaml | awk -F': ' '{print $2}' | tr -d '"' | envsubst)
-    
+
     case "$layer" in
         "oss")
-            ipk_path="$shared_dir/rdk-arm64-oss/4.6.2-community/ipk"
+            ipk_path="$shared_dir/rdk-arm64-oss/${OSS_IPK_VERSION}/ipk"
             ;;
-        "vendor"|"middleware"|"application")
-            ipk_path="$shared_dir/raspberrypi4-64-rdke-${layer}/RDK7-1.0.0/ipk"
+        "vendor")
+            ipk_path="$shared_dir/raspberrypi4-64-rdke-vendor/${VENDOR_IPK_VERSION}/ipk"
+            ;;
+        "middleware")
+            ipk_path="$shared_dir/raspberrypi4-64-rdke-middleware/${MIDDLEWARE_IPK_VERSION}/ipk"
+            ;;
+        "application")
+            ipk_path="$shared_dir/raspberrypi4-64-rdke-application/${APPLICATION_IPK_VERSION}/ipk"
             ;;
     esac
-    
-    if [ -d "$ipk_path" ] && [ "$(ls -A $ipk_path 2>/dev/null)" ]; then
+
+    if [ -d "$ipk_path" ] && [ "$(ls -A "$ipk_path" 2>/dev/null)" ]; then
         return 0  # Local available
     else
         return 1  # Local not available
@@ -139,9 +130,20 @@ check_local_ipk_available() {
 
 # function: setup()
 setup() {
-    print_disclaimer
-    print_info "Running RDK-7 setup (outside container)..."
-    
+    print_info "Running RDK setup (outside container)..."
+
+    # Ensure Mako is installed
+    if python3 -c "import mako" 2>/dev/null; then
+       print_info "Mako is already installed."
+    else
+        print_info "Mako not found. Installing..."
+        pip3 install mako || {
+            print_error "Failed to install Mako."
+            exit 1
+        }
+        export PATH="$PATH:$HOME/.local/bin"
+    fi
+
     # Get layer if not provided via CLI
     if [ -z "$LAYER" ]; then
         if [ "$HEADLESS" = "true" ]; then
@@ -158,89 +160,112 @@ setup() {
         # Use provided layer repos from CLI
         layer_repos_arg="--layer-repos \"$LAYER_REPOS\""
     elif [ "$HEADLESS" != "true" ]; then
-        # Interactive mode: check for local availability and ask
+        # Interactive mode: always ask for each layer
         local repo_config=""
         for layer in oss vendor middleware application; do
+            # Default to remote
             local use_local=false
+
+            # Inform if local IPKs are available (optional)
             if check_local_ipk_available "$layer"; then
                 print_info "Local IPK packages available for $layer layer"
-                get_input "Use local repository for $layer? (y/N)" "n" "USE_LOCAL"
-                if [ "${USE_LOCAL,,}" = "y" ]; then
-                    use_local=true
-                fi
             fi
-            
+
+            # Always prompt user
+            get_input "Use local repository for $layer? (y/N)" "n" "USE_LOCAL"
+            if [ "${USE_LOCAL,,}" = "y" ]; then
+                use_local=true
+            fi
+
+            # Append to repo_config
+            if [ -n "$repo_config" ]; then
+                repo_config="${repo_config},"
+            fi
             if [ "$use_local" = "true" ]; then
-                if [ -n "$repo_config" ]; then
-                    repo_config="${repo_config},"
-                fi
                 repo_config="${repo_config}${layer}:local"
             else
-                if [ -n "$repo_config" ]; then
-                    repo_config="${repo_config},"
-                fi
                 repo_config="${repo_config}${layer}:remote"
             fi
         done
-        
+
         if [ -n "$repo_config" ]; then
             layer_repos_arg="--layer-repos \"$repo_config\""
         fi
     fi
-    
+
     # Generate build.env
     eval "./generate-rdk-build-env --layer $LAYER $layer_repos_arg > build.env"
-    
+
     print_success "Setup completed for $LAYER layer"
 }
 
 # Generic docker run function to eliminate code duplication
+
 docker_run_command() {
     local command="$1"
     local description="$2"
     local interactive="${3:-false}"
-    
-    [ "$interactive" = "false" ] && print_disclaimer
+
+    [ "$interactive" = "false" ]
     print_info "$description"
-    
+
     # Check if build.env exists (except for shell command)
     if [ "$command" != "shell" ] && [ ! -f "build.env" ]; then
         print_error "build.env not found. Please run '$0 setup' first"
         exit 1
     fi
-    
-    local user_id=$(id -u)
-    local group_id=$(id -g)
-    local workspace="$(pwd)"
-    
-    local docker_opts="--rm --name $CONTAINER_NAME --user $user_id:$group_id"
-    [ "$interactive" = "true" ] && docker_opts="-it --rm --user $user_id:$group_id"
-    
+
+    # Ensure image name
+    IMAGE_NAME="${IMAGE_NAME:-rdk-target-builder:latest}"
+    if [ -z "$IMAGE_NAME" ]; then
+        print_error "IMAGE_NAME is not set. Export IMAGE_NAME or set a default."
+        exit 1
+    fi
+
+    # Provide a safe default container name (or remove --name entirely)
+    CONTAINER_NAME="${CONTAINER_NAME:-rdk-target-builder}"
+
+    local user_id group_id workspace docker_opts
+    user_id="$(id -u)"
+    group_id="$(id -g)"
+    workspace="$(pwd)"
+
+    if [ "$interactive" = "true" ]; then
+        docker_opts="-it --rm --name $CONTAINER_NAME --user $user_id:$group_id"
+    else
+        docker_opts="--rm --name $CONTAINER_NAME --user $user_id:$group_id"
+    fi
+
     docker run $docker_opts \
-        -v "$workspace:/workspace" \
+        -v "$workspace:/home/rdk/workspace" \
         -v "$HOME/.ssh:/home/rdk/.ssh:ro" \
         -v "$HOME/.gitconfig:/home/rdk/.gitconfig:ro" \
         -v "$HOME/.netrc:/home/rdk/.netrc:ro" \
-        -v "$HOME/community_shared:/home/rdk/community_shared" \
+        -v "$HOME/community:/home/rdk/community" \
         -e USER_ID="$user_id" \
         -e GROUP_ID="$group_id" \
+        -e REVISION_MODE="${REVISION_MODE:-tag}" \
+        -e MANIFEST_BRANCH="${MANIFEST_BRANCH:-}" \
+        -e OSS_BRANCH="${OSS_BRANCH:-}" \
+        -e MANIFEST_FILE="${MANIFEST_FILE:-}" \
+        -e LAYER="${LAYER:-}" \
         "$IMAGE_NAME" "$command"
 }
 
 run() {
-    docker_run_command "build" "Running RDK-7 build (inside container)..."
+    docker_run_command "build" "Running RDK build (inside container)..."
 }
 
 run_dependency() {
-    docker_run_command "dependency" "Running RDK-7 dependency graph generation (inside container)..."
+    docker_run_command "dependency" "Running RDK dependency graph generation (inside container)..."
 }
 
 sync() {
-    docker_run_command "sync" "Running RDK-7 layer sync (inside container)..."
+    docker_run_command "sync" "Running RDK layer sync (inside container)..."
 }
 
 shell() {
-    docker_run_command "shell" "Starting shell in RDK-7 container..." "true"
+    docker_run_command "shell" "Starting shell in RDK container..." "true"
 }
 
 cleanup() {
