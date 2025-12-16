@@ -275,7 +275,7 @@ EOF
     local image_build_status=0
 
     if [ -z "$image_name" ]; then
-        print_error "No image name provided for layer: $layer_name"
+        print_error "No image name configured for layer: $layer_name. Check get_layer_config() function."
         image_build_status=1
     else
         print_info "Building $layer_name image..."
