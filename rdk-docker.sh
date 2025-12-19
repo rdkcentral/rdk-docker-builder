@@ -244,9 +244,7 @@ docker_run_command() {
         -v "$HOME/community:/home/rdk/community" \
         -e USER_ID="$user_id" \
         -e GROUP_ID="$group_id" \
-        -e REVISION_MODE="${REVISION_MODE:-tag}" \
-        -e MANIFEST_BRANCH="${MANIFEST_BRANCH:-}" \
-        -e OSS_BRANCH="${OSS_BRANCH:-}" \
+        -e REPO_MANIFEST_BRANCH="${REPO_MANIFEST_BRANCH:-}" \
         -e MANIFEST_FILE="${MANIFEST_FILE:-}" \
         -e LAYER="${LAYER:-}" \
         "$IMAGE_NAME" "$command"

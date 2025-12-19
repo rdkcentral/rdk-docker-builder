@@ -7,16 +7,12 @@
 <%
     import os
 
-    # Mode (env-first)
-    revision_mode_env = os.environ.get('REVISION_MODE', build.get('revision_mode', 'tag'))
-
     # Target/LAYER (env-first)
     target_env = os.environ.get('TARGET', build['target'])
     layer_env  = os.environ.get('LAYER', target_layer)
 
     # Branches (env-first)
-    manifest_branch_env = os.environ.get('MANIFEST_BRANCH', build['branch']['manifest'])
-    oss_branch_env      = os.environ.get('OSS_BRANCH', build['branch']['oss'])
+    manifest_branch_env = os.environ.get('REPO_MANIFEST_BRANCH', build['branch']['manifest'])
 
     # Manifest files (env-first; defaults from your config)
     manifest_file_env              = os.environ.get('MANIFEST_FILE', build.get('manifest_file', 'default.xml'))
@@ -32,11 +28,10 @@
 # Target configuration
 export TARGET="${target_env}"
 export LAYER="${layer_env}"
+export SHARED_DIR="${build['shared-dir']}"
 
 # Mode, Branches and Manifest
-export REVISION_MODE="${revision_mode_env}"
-export MANIFEST_BRANCH="${manifest_branch_env}"
-export OSS_BRANCH="${oss_branch_env}"
+export REPO_MANIFEST_BRANCH="${manifest_branch_env}"
 export MANIFEST_FILE="${manifest_file_env}"
 
 # IPK Path
@@ -44,6 +39,10 @@ export OSS_IPK_VERSION="${oss_ipk_env}"
 export VENDOR_IPK_VERSION="${vendor_ipk_env}"
 export MIDDLEWARE_IPK_VERSION="${middleware_ipk_env}"
 export APPLICATION_IPK_VERSION="${application_ipk_env}"
+
+# IPK Layer
+export OSS_IPK_LAYER="${build['machine']['arch']}"
+export NON_OSS_IPK_LAYER="${build['machine']['model']}"
 
 # Layer directories (uses container paths)
 % for layer_name, layer in layers.items():

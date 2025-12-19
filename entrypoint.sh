@@ -77,41 +77,56 @@ get_layer_config() {
 
     package_name="lib32-packagegroup-${layer_name}-layer"
     image_name="lib32-${layer_name}-test-image"
+    branch_var="REPO_MANIFEST_BRANCH"
 
     # Layer-specific defaults and branch variable mapping
     case "$layer_name" in
         "oss")
-            branch_var="OSS_BRANCH"
             manifest_dir="rdke-oss-manifest"
             image_name="core-image-minimal"
             ;;
         "vendor")
-            branch_var="MANIFEST_BRANCH"
             manifest_dir="vendor-manifest-raspberrypi"
             ;;
         "middleware")
-            branch_var="MANIFEST_BRANCH"
             manifest_dir="middleware-manifest-rdke"
             ;;
         "application")
-            branch_var="MANIFEST_BRANCH"
             manifest_dir="application-manifest-rdke"
             ;;
         "image-assembler")
-            branch_var="MANIFEST_BRANCH"
             manifest_dir="image-assembler-manifest-rdke"
             package_name=
             image_name="lib32-rdk-fullstack-image"
             ;;
         *)
-            branch_var="MANIFEST_BRANCH"
-            manifest_dir="${layer_name}-manifest-rdke"
-            ;;
+            print_error "Unknown layer ${layer_name} . Supported layer: oss, vendor, middleware, application, image-assembler."
+	    return 1
+	    ;;
     esac
 }
 
-# Initialize or sync layer repository
 
+# Resolve whether a ref is a tag or a branch using git ls-remote
+resolve_git_revision() {
+  local repo_url="$1"
+  local ref="$2"
+
+  if git ls-remote --exit-code --tags "$repo_url" "refs/tags/${ref}" >/dev/null 2>&1; then
+    echo "refs/tags/${ref}"
+    return 0
+  fi
+
+  if git ls-remote --exit-code "$repo_url" "${ref}" >/dev/null 2>&1; then
+    echo "${ref}"
+    return 0
+  fi
+
+  echo "[ERROR] '${ref}' not found as tag (refs/tags) or branch in ${repo_url}" >&2
+  return 1
+}
+
+# Initialize or sync layer repository
 init_or_sync_layer() {
 
     local layer_name="${1:?layer_name is required}"
@@ -128,7 +143,7 @@ init_or_sync_layer() {
         exit 1
     fi
     if [ -z "${!branch_var:-}" ]; then
-        echo "[ERROR] ${branch_var} is empty. For '${layer_name}', export OSS_BRANCH (oss) or MANIFEST_BRANCH (others)." >&2
+        echo "[ERROR] ${branch_var} is empty. For '${layer_name}', export REPO_MANIFEST_BRANCH." >&2
         exit 1
     fi
     if [ -z "${!manifest_url_var:-}" ]; then
@@ -156,14 +171,10 @@ init_or_sync_layer() {
         fi
     fi
 
-    # --- Compute revision (tag or branch) ---
-    local REVISION_MODE_LOCAL="${REVISION_MODE:-tag}"
-    local revision=""
-    case "${REVISION_MODE_LOCAL}" in
-        tag)    revision="refs/tags/${!branch_var}" ;;
-        branch) revision="${!branch_var}" ;;
-        *)      echo "[ERROR] REVISION_MODE must be 'tag' or 'branch' (got: '${REVISION_MODE_LOCAL}')." >&2; exit 1 ;;
-    esac
+
+    repo_url="${!manifest_url_var}"
+    ref="${REPO_MANIFEST_BRANCH}"
+    revision="$(resolve_git_revision "${repo_url}" "${ref}")"
 
     # --- Determine init vs sync ---
     local repo_dir="$layer_dir/.repo"
@@ -176,7 +187,6 @@ init_or_sync_layer() {
 
     # --- Layer Config Logging ---
     echo "[INFO] Layer: ${layer_name}"
-    echo "  REVISION_MODE=${REVISION_MODE_LOCAL}"
     echo "  branch_var=${branch_var} → ${!branch_var}"
     echo "  manifest_url_var=${manifest_url_var} → ${!manifest_url_var}"
     echo "  manifest_file_var=${manifest_file_var} → ${!manifest_file_var:-<unset>}"
@@ -194,20 +204,19 @@ init_or_sync_layer() {
 
     # --- Init or Sync ---
     if [ -z "$existing_dir" ]; then
-        echo "[INFO] Initializing ${layer_name} manifest..."
-        # Use -b "${revision}" with 'repo init' (supports branches and refs/tags/..)
-        repo init -u "${!manifest_url_var}" -b "${revision}" -m "${manifest_file}" || {
-            echo "[ERROR] repo init failed" >&2; exit 1;
-        }
-        repo sync --no-clone-bundle --no-tags -j"$(nproc 2>/dev/null || echo 8)" || {
-            echo "[ERROR] repo sync failed" >&2; exit 1;
-        }
+      echo "[INFO] Initializing ${layer_name} manifest..."
+      repo init -u "${repo_url}" -b "${revision}" -m "${manifest_file}" || {
+        echo "[ERROR] repo init failed" >&2; exit 1;
+      } 
+      repo sync --no-clone-bundle --no-tags -j"$(nproc 2>/dev/null || echo 8)" || {
+        echo "[ERROR] repo sync failed" >&2; exit 1;
+      }
     else
-        echo "[INFO] Syncing existing ${layer_name} repositories..."
-        cd "$existing_dir" || { echo "[ERROR] Cannot cd to $existing_dir" >&2; exit 1; }
-        repo sync --no-clone-bundle --no-tags -j"$(nproc 2>/dev/null || echo 8)" || {
-            echo "[ERROR] repo sync failed" >&2; exit 1;
-        }
+      echo "[INFO] Syncing existing ${layer_name} repositories..."
+      cd "$existing_dir" || { echo "[ERROR] Cannot cd to $existing_dir" >&2; exit 1; }
+      repo sync --no-clone-bundle --no-tags -j"$(nproc 2>/dev/null || echo 8)" || {
+        echo "[ERROR] repo sync failed" >&2; exit 1;
+      }
     fi
 }
 
@@ -378,14 +387,20 @@ configure_ipk_feeds() {
 }
 
 create_ipk_feed() {
-    local layer=$1
-    local ipk_path_var="${layer^^}_IPK_PATH"
-    local ipk_path="${!ipk_path_var}"
-    
-    print_info "Creating $layer IPK feed..."
+    local layer_name=$1
+    local ipk_layer
+
+    if [[ "${layer_name}" == "oss" ]]; then
+      ipk_layer="${OSS_IPK_LAYER}"
+    else
+      ipk_layer="${NON_OSS_IPK_LAYER}"
+    fi
+
+    local ipk_path="${SHARED_DIR}/${ipk_layer}-${layer_name}/${REPO_MANIFEST_BRANCH}/ipk"
+
+    print_info "Creating $layer_name IPK feed..."
     print_info "Starting IPK feed creation"
-    print_info "Layer           : ${layer}"
-    print_info "IPK path var    : ${ipk_path_var}"
+    print_info "Layer           : ${layer_name}"
     print_info "Resolved IPK dir: ${ipk_path}"
 
     if [ -d "${ipk_path}" ]; then
@@ -404,7 +419,7 @@ create_ipk_feed() {
     print_info "PACKAGE_ARCH    : ${PACKAGE_ARCH}"
     print_info "OPKG_MAKE_INDEX : ${OPKG_MAKE_INDEX}"
     
-    if [ "$layer" = "oss" ]; then
+    if [ "$layer_name" = "oss" ]; then
         # OSS layer has special handling
         if [ -f "$OPKG_MAKE_INDEX" ]; then
 	    print_info "Creating package index at ${BUILD_IPK_DIR}/${PACKAGE_ARCH}"
