@@ -8,8 +8,8 @@ build:
   target: "raspberrypi"
 
   branch:
-    manifest: "RDK7-1.0.0"
-    oss: "4.6.2-community"
+    manifest: "develop"
+    oss: "4.9.0"
 
   machine:
     arch: "rdk-arm64"
@@ -27,7 +27,7 @@ repository:
 layers:
   oss:
     build-command: "bitbake core-image-minimal"
-    manifest: "https://github.com/rdkcentral/rdke-oss-manifest/rdk-arm.xml"
+    manifest: "https://github.com/rdkcentral/rdke-oss-manifest/rdk-oss.xml"
   
   vendor:
     build-command: "bitbake lib32-vendor-test-image"
