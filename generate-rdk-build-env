@@ -218,10 +218,10 @@ def main() -> None:
                 if 'repository-type' not in config['layers'][layer_name]:
                     config['layers'][layer_name]['repository-type'] = config['repository']['type']
 
-        # Create shared directory
+        # Create ipk directory
         # This must be done before the container is ever started
-        shared_directory =  config['build']['shared-dir']
-        dir_path = os.path.expandvars(shared_directory)
+        ipk_directory =  config['build']['ipk-dir']
+        dir_path = os.path.expandvars(ipk_directory)
         os.makedirs(dir_path, exist_ok=True)
 
         # Render the template

@@ -444,7 +444,7 @@ create_ipk_feed() {
       ipk_layer="${NON_OSS_IPK_LAYER}"
     fi
 
-    local ipk_path="${SHARED_DIR}/${ipk_layer}-${layer_name}/${REPO_MANIFEST_BRANCH}/ipk"
+    local ipk_path="${IPK_DIR}/${ipk_layer}-${layer_name}/${REPO_MANIFEST_BRANCH}/ipk"
 
     print_info "Creating $layer_name IPK feed..."
     print_info "Starting IPK feed creation"

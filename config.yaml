@@ -15,7 +15,7 @@ build:
     arch: "rdk-arm64"
     model: "raspberrypi4-64-rdke"
   
-  shared-dir: "${HOME}/community"
+  ipk-dir: "${HOME}/community"
   workspace-dir: "/home/rdk/workspace"
 
 # Repository configuration
