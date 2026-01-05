@@ -314,74 +314,122 @@ EOF
 
 configure_ipk_feeds() {
     local layer=$1
-    
+
     # Determine which paths to use based on per-layer REPO_TYPE
     local oss_path vendor_path middleware_path application_path
-    
+
     if [ "$OSS_REPO_TYPE" = "remote" ]; then
         oss_path="$OSS_IPK_SERVER_URL"
     else
         oss_path="file:/$OSS_IPK_PATH"
     fi
-    
+
     if [ "$VENDOR_REPO_TYPE" = "remote" ]; then
         vendor_path="$VENDOR_IPK_SERVER_URL"
     else
         vendor_path="file:/$VENDOR_IPK_PATH"
     fi
-    
+
     if [ "$MIDDLEWARE_REPO_TYPE" = "remote" ]; then
         middleware_path="$MIDDLEWARE_IPK_SERVER_URL"
     else
         middleware_path="file:/$MIDDLEWARE_IPK_PATH"
     fi
-    
+
     if [ "$APPLICATION_REPO_TYPE" = "remote" ]; then
         application_path="$APPLICATION_IPK_SERVER_URL"
     else
         application_path="file:/$APPLICATION_IPK_PATH"
     fi
-    
+
     print_info "Configuring IPK feeds (OSS:$OSS_REPO_TYPE, Vendor:$VENDOR_REPO_TYPE, MW:$MIDDLEWARE_REPO_TYPE, App:$APPLICATION_REPO_TYPE)"
-    
+
+    # Resolve layer versions to compute default ipk paths if version not set
+    OSS_LAYER_VERSION=$(sed -n 's/^OSS_LAYER_VERSION *= *"\(.*\)"/\1/p' \
+        rdke/common/meta-rdk-oss-reference/conf/include/package_revisions_oss.inc)
+
+    if [ -z "$OSS_IPK_VERSION" ] || [ "$OSS_IPK_VERSION" = "None" ]; then
+        oss_path="file://${HOME}/community/rdk-arm64-oss/${OSS_LAYER_VERSION}/ipk"
+    else
+        oss_path="${OSS_IPK_PATH}"
+    fi
+
+    VENDOR_LAYER_VERSION=$(sed -n 's/^VENDOR_LAYER_VERSION *= *"\(.*\)"/\1/p' \
+        rdke/vendor/meta-vendor-release/conf/machine/include/vendor.inc)
+
+    if [ -z "$VENDOR_IPK_VERSION" ] || [ "$VENDOR_IPK_VERSION" = "None" ]; then
+        vendor_path="file://${HOME}/community/raspberrypi4-64-rdke-vendor/${VENDOR_LAYER_VERSION}/ipk"
+    else
+        vendor_path="${VENDOR_IPK_PATH}"
+    fi
+
+    MW_RELEASE_NUM=$(sed -n 's/^RELEASE_NUM *= *"\(.*\)"/\1/p' \
+        rdke/middleware/meta-middleware-release/conf/machine/include/middleware.inc)
+
+    if [ -z "$MIDDLEWARE_IPK_VERSION" ] || [ "$MIDDLEWARE_IPK_VERSION" = "None" ]; then
+        middleware_path="file://${HOME}/community/raspberrypi4-64-rdke-middleware/${MW_RELEASE_NUM}/ipk"
+    else
+        middleware_path="${MIDDLEWARE_IPK_PATH}"
+    fi
+
+    APPLICATION_LAYER_VERSION=$(sed -n 's/^APPLICATION_LAYER_VERSION *= *"\(.*\)"/\1/p' \
+        rdke/application/meta-application-release/conf/machine/include/application.inc)
+
+    if [ -z "$APPLICATION_IPK_VERSION" ] || [ "$APPLICATION_IPK_VERSION" = "None" ]; then
+        application_path="file://${HOME}/community/raspberrypi4-64-rdke-application/${APPLICATION_LAYER_VERSION}/ipk"
+    else
+        application_path="${APPLICATION_IPK_PATH}"
+    fi
+
+    # Set the IPK path in conf files
+    set_ipk_path() {
+        sed -i \
+            -e "s|^$1 *[?]*= *.*|$1 = \"$2\"|" \
+            "$3"
+    }
+
     case "$layer" in
-        "oss") 
-            ;;  # No dependencies
+        "oss")
+            ;;
         "vendor")
-            sed -i "s|OSS_IPK_SERVER_PATH = \".*\"|OSS_IPK_SERVER_PATH = \"$oss_path\"|" \
+            set_ipk_path OSS_IPK_SERVER_PATH "$oss_path" \
                 rdke/common/meta-oss-reference-release/conf/machine/include/oss.inc
-            ;;
+            set_ipk_path REL_OSS_IPK_SERVER_PATH "$oss_path" \
+                 rdke/common/meta-oss-reference-release/conf/machine/include/oss.inc
+        ;;
         "middleware")
-            sed -i "s|OSS_IPK_SERVER_PATH = \".*\"|OSS_IPK_SERVER_PATH = \"$oss_path\"|" \
+            set_ipk_path OSS_IPK_SERVER_PATH "$oss_path" \
                 rdke/common/meta-oss-reference-release/conf/machine/include/oss.inc
-	    sed -i "s|VENDOR_IPK_SERVER_PATH ?= \".*\"|VENDOR_IPK_SERVER_PATH = \"$vendor_path\"|" \
-		rdke/vendor/meta-vendor-release/conf/machine/include/vendor.inc
-            sed -i "s|VENDOR_IPK_SERVER_PATH = \".*\"|VENDOR_IPK_SERVER_PATH = \"$vendor_path\"|" \
+            set_ipk_path REL_OSS_IPK_SERVER_PATH "$oss_path" \
+                rdke/common/meta-oss-reference-release/conf/machine/include/oss.inc
+            set_ipk_path VENDOR_IPK_SERVER_PATH "$vendor_path" \
                 rdke/vendor/meta-vendor-release/conf/machine/include/vendor.inc
-            ;;
+        ;;
         "application")
-            sed -i "s|OSS_IPK_SERVER_PATH = \".*\"|OSS_IPK_SERVER_PATH = \"$oss_path\"|" \
+            set_ipk_path OSS_IPK_SERVER_PATH "$oss_path" \
                 rdke/common/meta-oss-reference-release/conf/machine/include/oss.inc
-            sed -i "s|VENDOR_IPK_SERVER_PATH = \".*\"|VENDOR_IPK_SERVER_PATH = \"$vendor_path\"|" \
+            set_ipk_path REL_OSS_IPK_SERVER_PATH "$oss_path" \
+                rdke/common/meta-oss-reference-release/conf/machine/include/oss.inc
+            set_ipk_path VENDOR_IPK_SERVER_PATH "$vendor_path" \
                 rdke/vendor/meta-vendor-release/conf/machine/include/vendor.inc
-	    sed -i "s|MW_IPK_SERVER_PATH ?= \".*\"|MW_IPK_SERVER_PATH = \"$middleware_path\"|" \
+            set_ipk_path MW_IPK_SERVER_PATH "$middleware_path" \
                 rdke/middleware/meta-middleware-release/conf/machine/include/middleware.inc
-            sed -i "s|MW_IPK_SERVER_PATH = \".*\"|MW_IPK_SERVER_PATH = \"$middleware_path\"|" \
-                rdke/middleware/meta-middleware-release/conf/machine/include/middleware.inc
-            ;;
+        ;;
         "image-assembler")
-            sed -i "s|OSS_IPK_SERVER_PATH = \".*\"|OSS_IPK_SERVER_PATH = \"$oss_path\"|" \
+            set_ipk_path OSS_IPK_SERVER_PATH "$oss_path" \
                 rdke/common/meta-oss-reference-release/conf/machine/include/oss.inc
-            sed -i "s|VENDOR_IPK_SERVER_PATH = \".*\"|VENDOR_IPK_SERVER_PATH = \"$vendor_path\"|" \
+            set_ipk_path REL_OSS_IPK_SERVER_PATH "$oss_path" \
+                rdke/common/meta-oss-reference-release/conf/machine/include/oss.inc
+            set_ipk_path VENDOR_IPK_SERVER_PATH "$vendor_path" \
                 rdke/vendor/meta-vendor-release/conf/machine/include/vendor.inc
-	    sed -i "s|MW_IPK_SERVER_PATH ?= \".*\"|MW_IPK_SERVER_PATH = \"$middleware_path\"|" \
+            set_ipk_path MW_IPK_SERVER_PATH "$middleware_path" \
                 rdke/middleware/meta-middleware-release/conf/machine/include/middleware.inc
-            sed -i "s|MW_IPK_SERVER_PATH = \".*\"|MW_IPK_SERVER_PATH = \"$middleware_path\"|" \
-                rdke/middleware/meta-middleware-release/conf/machine/include/middleware.inc
-	    sed -i "s|APPLICATION_IPK_SERVER_PATH ?= \".*\"|APPLICATION_IPK_SERVER_PATH = \"$application_path\"|" \
+            set_ipk_path APPLICATION_IPK_SERVER_PATH "$application_path" \
                 rdke/application/meta-application-release/conf/machine/include/application.inc
-            sed -i "s|APPLICATION_IPK_SERVER_PATH = \".*\"|APPLICATION_IPK_SERVER_PATH = \"$application_path\"|" \
-                rdke/application/meta-application-release/conf/machine/include/application.inc
+        ;;
+        *)
+            echo "Unknown layer: $layer" >&2
+            return 1
             ;;
     esac
 }
