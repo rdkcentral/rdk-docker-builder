@@ -18,10 +18,10 @@
     manifest_file_env              = os.environ.get('MANIFEST_FILE', build.get('manifest_file', 'default.xml'))
 
     # To configure IPK path
-    oss_ipk_env = os.environ.get('OSS_IPK_VERSION', build['branch']['oss'])
-    vendor_ipk_env = os.environ.get('VENDOR_IPK_VERSION', build['branch']['manifest'])
-    middleware_ipk_env = os.environ.get('MIDDLEWARE_IPK_VERSION', build['branch']['manifest'])
-    application_ipk_env = os.environ.get('APPLICATION_IPK_VERSION', build['branch']['manifest'])
+    oss_ipk_env = os.environ.get('OSS_IPK_VERSION', '')
+    vendor_ipk_env = os.environ.get('VENDOR_IPK_VERSION', '')
+    middleware_ipk_env = os.environ.get('MIDDLEWARE_IPK_VERSION', '')
+    application_ipk_env = os.environ.get('APPLICATION_IPK_VERSION', '')
 
 %>
 
