@@ -60,7 +60,7 @@ Usage: $0 [OPTIONS] <command>
 
 Commands:
     create_image      Create the RDK Layer Builder Docker Image
-    setup             Runs generate-rdk-build-env to create RDK layer build config: build.env(runs outside container)
+    setup             Runs generate-rdk-build-env to create RDK layer build config: build.env (runs outside container)
     run               Run the RDK Layer Build Process (runs inside container using build.env from setup step)
     run dependency    Generate dependency graph instead of building (inside container)
     sync              Sync the configured layer without building (inside container)
@@ -163,8 +163,8 @@ setup() {
         # Interactive mode: always ask for each layer
         local repo_config=""
         for layer in oss vendor middleware application; do
-            # Default to remote
-            local use_local=false
+            # Default to local
+            local use_local=true
 
             # Inform if local IPKs are available (optional)
             if check_local_ipk_available "$layer"; then
