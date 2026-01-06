@@ -28,7 +28,7 @@
 # Target configuration
 export TARGET="${target_env}"
 export LAYER="${layer_env}"
-export SHARED_DIR="${build['shared-dir']}"
+export IPK_DIR="${build['ipk-dir']}"
 
 # Mode, Branches and Manifest
 export REPO_MANIFEST_BRANCH="${manifest_branch_env}"
@@ -52,13 +52,13 @@ export ${env_prefix[layer_name]}_DIR="${build['workspace-dir']}/${layer_name}-la
 # IPK feed paths (uses container paths)
 % for layer_name, layer in layers.items():
 % if layer_name == 'oss':
-export ${env_prefix[layer_name]}_IPK_PATH="${build['shared-dir']}/${build['machine']['arch']}-${layer_name}/${oss_ipk_env}/ipk"
+export ${env_prefix[layer_name]}_IPK_PATH="${build['ipk-dir']}/${build['machine']['arch']}-${layer_name}/${oss_ipk_env}/ipk"
 % elif layer_name == 'vendor':
-export ${env_prefix[layer_name]}_IPK_PATH="${build['shared-dir']}/${build['machine']['model']}-${layer_name}/${vendor_ipk_env}/ipk"
+export ${env_prefix[layer_name]}_IPK_PATH="${build['ipk-dir']}/${build['machine']['model']}-${layer_name}/${vendor_ipk_env}/ipk"
 % elif layer_name == 'middleware':
-export ${env_prefix[layer_name]}_IPK_PATH="${build['shared-dir']}/${build['machine']['model']}-${layer_name}/${middleware_ipk_env}/ipk"
+export ${env_prefix[layer_name]}_IPK_PATH="${build['ipk-dir']}/${build['machine']['model']}-${layer_name}/${middleware_ipk_env}/ipk"
 % elif layer_name == 'application':
-export ${env_prefix[layer_name]}_IPK_PATH="${build['shared-dir']}/${build['machine']['model']}-${layer_name}/${application_ipk_env}/ipk"
+export ${env_prefix[layer_name]}_IPK_PATH="${build['ipk-dir']}/${build['machine']['model']}-${layer_name}/${application_ipk_env}/ipk"
 % endif
 % endfor
 
