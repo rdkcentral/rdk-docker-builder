@@ -14,8 +14,21 @@
     # Branches (env-first)
     manifest_branch_env = os.environ.get('REPO_MANIFEST_BRANCH', build['branch']['manifest'])
 
-    # Manifest files (env-first; defaults from your config)
-    manifest_file_env              = os.environ.get('MANIFEST_FILE', build.get('manifest_file', 'default.xml'))
+    # Manifest files: check for global override from environment variable MANIFEST_FILE, if this is set, it will take priority over defaults
+    manifest_file_env = os.environ.get('MANIFEST_FILE')
+
+    # Per-layer default manifest filenames when MANIFEST_FILE is not provided.
+    manifest_defaults = {
+        'oss': 'rdk-oss.xml',
+        'vendor': 'rdke-raspberrypi.xml',
+        'middleware': 'raspberrypi4-64.xml',
+        'application': 'raspberrypi4-64.xml',
+        'image-assembler': 'raspberrypi4-64.xml',
+    }
+
+    # Use MANIFEST_FILE from env if defined. 
+    # Otherwise, use the per-layer default based on layer_env, if layer_env is unknown, fall back to 'default.xml'
+    manifest_file_get = manifest_file_env or manifest_defaults.get(layer_env, 'default.xml')
 
     # To configure IPK path
     oss_ipk_env = os.environ.get('OSS_IPK_VERSION', '')
@@ -32,7 +45,7 @@ export IPK_DIR="${build['ipk-dir']}"
 
 # Mode, Branches and Manifest
 export REPO_MANIFEST_BRANCH="${manifest_branch_env}"
-export MANIFEST_FILE="${manifest_file_env}"
+export MANIFEST_FILE="${manifest_file_get}"
 
 # IPK Path
 export OSS_IPK_VERSION="${oss_ipk_env}"
