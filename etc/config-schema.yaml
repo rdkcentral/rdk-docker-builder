@@ -9,7 +9,7 @@ properties:
       - "target"
       - "branch"
       - "machine"
-      - "shared-dir"
+      - "ipk-dir"
       - "workspace-dir"
     additionalproperties: true
     properties:
@@ -23,7 +23,7 @@ properties:
       machine:
         $ref: "#/definitions/machine"
 
-      shared-dir:
+      ipk-dir:
         type: string
         minlength: 1
 

@@ -3,15 +3,15 @@
 version: '3.8'
 
 services:
-  rdk-target-builder:
+  rdk-layer-builder:
     build:
       context: .
       args:
         USER_ID: ${USER_ID:-1000}
         GROUP_ID: ${GROUP_ID:-1000}
         USERNAME: ${USERNAME:-rdk}
-    image: rdk-target-builder:latest
-    container_name: rdk-target-builder
+    image: rdk-layer-builder:latest
+    container_name: rdk-layer-builder
     working_dir: /home/rdk/workspace
     user: "${USER_ID:-1000}:${GROUP_ID:-1000}"
     volumes:
@@ -30,15 +30,15 @@ services:
     profiles:
       - interactive
 
-  rdk-target-setup:
+  rdk-layer-setup:
     build:
       context: .
       args:
         USER_ID: ${USER_ID:-1000}
         GROUP_ID: ${GROUP_ID:-1000}
         USERNAME: ${USERNAME:-rdk}
-    image: rdk-target-builder:latest
-    container_name: rdk-target-setup
+    image: rdk-layer-builder:latest
+    container_name: rdk-layer-setup
     working_dir: /home/rdk/workspace
     user: "${USER_ID:-1000}:${GROUP_ID:-1000}"
     volumes:
@@ -50,15 +50,15 @@ services:
     profiles:
       - setup
 
-  rdk-target-build:
+  rdk-layer-build:
     build:
       context: .
       args:
         USER_ID: ${USER_ID:-1000}
         GROUP_ID: ${GROUP_ID:-1000}
         USERNAME: ${USERNAME:-rdk}
-    image: rdk-target-builder:latest
-    container_name: rdk-target-build
+    image: rdk-layer-builder:latest
+    container_name: rdk-layer-build
     working_dir: /home/rdk/workspace
     user: "${USER_ID:-1000}:${GROUP_ID:-1000}"
     volumes:
@@ -76,15 +76,15 @@ services:
     profiles:
       - build
 
-  rdk-target-shell:
+  rdk-layer-shell:
     build:
       context: .
       args:
         USER_ID: ${USER_ID:-1000}
         GROUP_ID: ${GROUP_ID:-1000}
         USERNAME: ${USERNAME:-rdk}
-    image: rdk-target-builder:latest
-    container_name: rdk-target-shell
+    image: rdk-layer-builder:latest
+    container_name: rdk-layer-shell
     working_dir: /home/rdk/workspace
     user: "${USER_ID:-1000}:${GROUP_ID:-1000}"
     volumes:

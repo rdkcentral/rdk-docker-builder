@@ -11,8 +11,8 @@ NC='\033[0m'
 
 DEFAULT_TARGET="raspberrypi"
 DEFAULT_LAYER="oss"
-IMAGE_NAME="rdk-target-builder"
-CONTAINER_NAME="rdk-target-builder"
+IMAGE_NAME="rdk-layer-builder"
+CONTAINER_NAME="rdk-layer-builder"
 
 # CLI variables
 HEADLESS=false
@@ -59,9 +59,9 @@ RDK Docker Builder (Unofficial Community Tool)
 Usage: $0 [OPTIONS] <command>
 
 Commands:
-    create_container  Build the Docker image with user mapping
-    setup             Run generate-rdk-build-env and configure RDK target (outside container)
-    run               Run the RDK build process (inside container)
+    create_image      Create the RDK Layer Builder Docker Image
+    setup             Runs generate-rdk-build-env to create RDK layer build config: build.env (runs outside container)
+    run               Run the RDK Layer Build Process (runs inside container using build.env from setup step)
     run dependency    Generate dependency graph instead of building (inside container)
     sync              Sync the configured layer without building (inside container)
     shell             Drop into a shell in the container
@@ -73,7 +73,7 @@ Options:
     -r, --layer-repos REPOS            Specify repository types per layer (e.g., "oss:remote,vendor:local,...")
 
 Examples:
-    $0 create_container
+    $0 create_image
     $0 setup                           # Interactive mode
     $0 -h -l oss setup                 # Headless mode, build OSS layer
     $0 -h -l application -r "oss:remote,vendor:remote,middleware:local,application:local" setup
@@ -83,7 +83,7 @@ Examples:
 EOF
 }
 
-create_container() {
+create_image() {
     print_info "Building RDK Docker image with user mapping..."
     
     local user_id=$(id -u)
@@ -103,21 +103,21 @@ check_local_ipk_available() {
     local layer=$1
     local ipk_path=""
 
-    # Read config to get the shared directory path
-    local shared_dir=$(grep "shared-dir:" config.yaml | awk -F': ' '{print $2}' | tr -d '"' | envsubst)
+    # Read config to get the ipk directory path
+    local ipk_dir=$(grep "ipk-dir:" config.yaml | awk -F': ' '{print $2}' | tr -d '"' | envsubst)
 
     case "$layer" in
         "oss")
-            ipk_path="$shared_dir/rdk-arm64-oss/${OSS_IPK_VERSION}/ipk"
+            ipk_path="$ipk_dir/rdk-arm64-oss/${OSS_IPK_VERSION}/ipk"
             ;;
         "vendor")
-            ipk_path="$shared_dir/raspberrypi4-64-rdke-vendor/${VENDOR_IPK_VERSION}/ipk"
+            ipk_path="$ipk_dir/raspberrypi4-64-rdke-vendor/${VENDOR_IPK_VERSION}/ipk"
             ;;
         "middleware")
-            ipk_path="$shared_dir/raspberrypi4-64-rdke-middleware/${MIDDLEWARE_IPK_VERSION}/ipk"
+            ipk_path="$ipk_dir/raspberrypi4-64-rdke-middleware/${MIDDLEWARE_IPK_VERSION}/ipk"
             ;;
         "application")
-            ipk_path="$shared_dir/raspberrypi4-64-rdke-application/${APPLICATION_IPK_VERSION}/ipk"
+            ipk_path="$ipk_dir/raspberrypi4-64-rdke-application/${APPLICATION_IPK_VERSION}/ipk"
             ;;
     esac
 
@@ -163,8 +163,8 @@ setup() {
         # Interactive mode: always ask for each layer
         local repo_config=""
         for layer in oss vendor middleware application; do
-            # Default to remote
-            local use_local=false
+            # Default to local
+            local use_local=true
 
             # Inform if local IPKs are available (optional)
             if check_local_ipk_available "$layer"; then
@@ -172,7 +172,7 @@ setup() {
             fi
 
             # Always prompt user
-            get_input "Use local repository for $layer? (y/N)" "n" "USE_LOCAL"
+            get_input "Use locally stored IPK's for $layer build? (y/n)" "y" "USE_LOCAL"
             if [ "${USE_LOCAL,,}" = "y" ]; then
                 use_local=true
             fi
@@ -199,7 +199,6 @@ setup() {
     print_success "Setup completed for $LAYER layer"
 }
 
-# Generic docker run function to eliminate code duplication
 
 docker_run_command() {
     local command="$1"
@@ -216,14 +215,14 @@ docker_run_command() {
     fi
 
     # Ensure image name
-    IMAGE_NAME="${IMAGE_NAME:-rdk-target-builder:latest}"
+    IMAGE_NAME="${IMAGE_NAME:-rdk-layer-builder:latest}"
     if [ -z "$IMAGE_NAME" ]; then
         print_error "IMAGE_NAME is not set. Export IMAGE_NAME or set a default."
         exit 1
     fi
 
     # Provide a safe default container name (or remove --name entirely)
-    CONTAINER_NAME="${CONTAINER_NAME:-rdk-target-builder}"
+    CONTAINER_NAME="${CONTAINER_NAME:-rdk-layer-builder}"
 
     local user_id group_id workspace docker_opts
     user_id="$(id -u)"
@@ -305,8 +304,8 @@ if [ -z "$COMMAND" ]; then
 fi
 
 case "$COMMAND" in
-    create_container)
-        create_container
+    create_image)
+        create_image
         ;;
     setup)
         setup
