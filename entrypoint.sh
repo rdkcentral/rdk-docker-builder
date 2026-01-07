@@ -352,7 +352,7 @@ configure_ipk_feeds() {
          if [ -z "$OSS_IPK_VERSION" ] || [ "$OSS_IPK_VERSION" = "None" ]; then
              oss_path="file://${HOME}/community/rdk-arm64-oss/${OSS_LAYER_VERSION}/ipk"
          else
-             oss_path="${OSS_IPK_PATH}"
+             oss_path="file://${OSS_IPK_PATH}"
          fi
     fi
 
@@ -363,7 +363,7 @@ configure_ipk_feeds() {
          if [ -z "$VENDOR_IPK_VERSION" ] || [ "$VENDOR_IPK_VERSION" = "None" ]; then
              vendor_path="file://${HOME}/community/raspberrypi4-64-rdke-vendor/${VENDOR_LAYER_VERSION}/ipk"
          else
-             vendor_path="${VENDOR_IPK_PATH}"
+             vendor_path="file://${VENDOR_IPK_PATH}"
          fi
     fi
 
@@ -374,7 +374,7 @@ configure_ipk_feeds() {
          if [ -z "$MIDDLEWARE_IPK_VERSION" ] || [ "$MIDDLEWARE_IPK_VERSION" = "None" ]; then
              middleware_path="file://${HOME}/community/raspberrypi4-64-rdke-middleware/${MW_RELEASE_NUM}/ipk"
          else
-             middleware_path="${MIDDLEWARE_IPK_PATH}"
+             middleware_path="file://${MIDDLEWARE_IPK_PATH}"
          fi
     fi
 
@@ -385,7 +385,7 @@ configure_ipk_feeds() {
          if [ -z "$APPLICATION_IPK_VERSION" ] || [ "$APPLICATION_IPK_VERSION" = "None" ]; then
              application_path="file://${HOME}/community/raspberrypi4-64-rdke-application/${APPLICATION_LAYER_VERSION}/ipk"
          else
-             application_path="${APPLICATION_IPK_PATH}"
+             application_path="file://${APPLICATION_IPK_PATH}"
          fi
     fi
 
