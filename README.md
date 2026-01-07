@@ -6,6 +6,25 @@ It is assumed the user is familiar with the RDK-E Layered Architeture. If not pl
 [RDK-E Code Releases](https://wiki.rdkcentral.com/spaces/CMF/pages/414065624/RDK-E+Video+Code+Releases)
 
 ---
+## Prequesites
+
+The following must be installed on your host system
+
+```bash
+docker 
+python 3.8 
+```
+
+- You will need enought storage space to perform the builds and store the IPK's generated.
+    - the IPK's can be stored on a locally mounted or a remote filesystem
+
+NOTE this docker setup has only been tested on UBUNTU 20.04 
+
+```
+TODO - give detailed storage requirements, lets check what other python version we can use
+```
+
+---
 ## Quick Start
 
 ```bash
@@ -126,10 +145,13 @@ export OSS_IPK_VERSION=4.9.0                   # OSS IPK version for packaging
 export VENDOR_IPK_VERSION=develop              # Vendor IPK version for packaging
 export MIDDLEWARE_IPK_VERSION=develop          # Middleware IPK version for packaging
 export APPLICATION_IPK_VERSION=develop         # Application IPK version for Packaging
+
+# once you set the overrides then run setup
+./rdk-docker.sh setup
 ```
 
 ---
-### Usage Notes
+## Usage Notes
 
 ### Default IPK Versions
 
@@ -165,15 +187,30 @@ TODO
 TODO
 ```
 
-### How to make changes in your build environment
+### How to view build logs and build output
+All build output for your layer is accessible form your local filesystem, i.e. you do not need to have the container running to view logs and retrieve images.
+The layer build output available in your clone in the following location.
+
 ```
-TODO
+<WORKSPACE>/rdk-docker-builder/<layer>-layer/build-raspberrypi4-64-rdke
+```
+
+### How to make changes in your build environment
+All source code changes in your layer can be made on your local filesystem, i.e. you do not need to have the container running to make changes.
+The layer source code is available in your clone in the following location.
+
+```
+<WORKSPACE>/rdk-docker-builder/<layer>-layer/rdke
 ```
 
 ### How to get a shell within the docker environment
 ```
 TODO
 ```
+
+### Docker Runtime Info
+The docker runtime user is `rdk` and home directory is `/home/rdk`
+The external IPK location is mounted in the following location `/home/rdk/community`
 
 ---
 ## Configuration
