@@ -11,6 +11,7 @@ NC='\033[0m'
 
 DEFAULT_TARGET="raspberrypi"
 DEFAULT_LAYER="oss"
+DEFAULT_BRANCH="develop"
 IMAGE_NAME="rdk-layer-builder"
 CONTAINER_NAME="rdk-layer-builder"
 
@@ -70,12 +71,13 @@ Commands:
 Options:
     -h, --headless                     Run in headless mode (no interactive prompts)
     -l, --layer LAYER                  Specify the layer to build (oss/vendor/middleware/application/image-assembler)
+    -b, --branch BRANCH                Specify the manifest branch (default: develop)
     -r, --layer-repos REPOS            Specify repository types per layer (e.g., "oss:remote,vendor:local,...")
 
 Examples:
     $0 create_image
     $0 setup                           # Interactive mode
-    $0 -h -l oss setup                 # Headless mode, build OSS layer
+    $0 setup -l oss -b develop         # Build OSS layer with develop branch
     $0 -h -l application -r "oss:remote,vendor:remote,middleware:local,application:local" setup
     $0 run                             # Run build process
     $0 run dependency                  # Generate dependency graph
@@ -153,7 +155,17 @@ setup() {
             get_input "Enter layer to build (oss/vendor/middleware/application/image-assembler)" "$DEFAULT_LAYER" "LAYER"
         fi
     fi
-    
+
+    # Get branch if not provided via CLI
+    if [ -z "$REPO_MANIFEST_BRANCH" ]; then
+        if [ "$HEADLESS" = "true" ]; then
+            REPO_MANIFEST_BRANCH="$DEFAULT_BRANCH"
+            print_info "Using default branch: $REPO_MANIFEST_BRANCH"
+        else
+            get_input "Enter branch to build (develop, feature, hotfix, tags)" "$DEFAULT_BRANCH" "REPO_MANIFEST_BRANCH"
+        fi
+    fi
+
     # Handle per-layer repository selection
     local layer_repos_arg=""
     if [ -n "$LAYER_REPOS" ]; then
@@ -169,12 +181,6 @@ setup() {
             # Inform if local IPKs are available (optional)
             if check_local_ipk_available "$layer"; then
                 print_info "Local IPK packages available for $layer layer"
-            fi
-
-            # Always prompt user
-            get_input "Use locally stored IPK's for $layer build? (y/n)" "y" "USE_LOCAL"
-            if [ "${USE_LOCAL,,}" = "y" ]; then
-                use_local=true
             fi
 
             # Append to repo_config
@@ -194,7 +200,7 @@ setup() {
     fi
 
     # Generate build.env
-    eval "./generate-rdk-build-env --layer $LAYER $layer_repos_arg > build.env"
+    eval "./generate-rdk-build-env --layer $LAYER --branch "$REPO_MANIFEST_BRANCH" $layer_repos_arg > build.env"
 
     print_success "Setup completed for $LAYER layer"
 }
@@ -276,12 +282,20 @@ trap cleanup SIGINT SIGTERM
 # Parse command line options
 while [[ $# -gt 0 ]]; do
     case $1 in
+        setup|run|create_image)
+            COMMAND="$1"
+            shift
+            ;;
         -h|--headless)
             HEADLESS=true
             shift
             ;;
         -l|--layer)
             LAYER="$2"
+            shift 2
+            ;;
+        -b|--branch)
+            REPO_MANIFEST_BRANCH="$2"
             shift 2
             ;;
         -r|--layer-repos)

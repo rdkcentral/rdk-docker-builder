@@ -168,6 +168,13 @@ Dependencies:
     )
 
     parser.add_argument(
+        "--branch",
+        "-b",
+        help="Set manifest branch to use (e.g., develop, feature, hotfix, tags/v1.2.3)",
+        required=True,
+    )
+
+    parser.add_argument(
         "--layer-repos",
         "-R",
         help="Set package repository type for each layer (format: oss:remote,vendor:local,...)",
@@ -229,6 +236,7 @@ def main() -> None:
         build_env = template.render(
             timestamp=datetime.now(timezone.utc),
             target_layer=args.layer,
+            target_branch=args.branch,
             env_prefix=ENV_PREFIX,
             **config,
         )

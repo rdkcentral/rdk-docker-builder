@@ -12,7 +12,7 @@
     layer_env  = os.environ.get('LAYER', target_layer)
 
     # Branches (env-first)
-    manifest_branch_env = os.environ.get('REPO_MANIFEST_BRANCH', build['branch']['manifest'])
+    manifest_branch_env = os.environ.get('REPO_MANIFEST_BRANCH', target_branch)
 
     # Manifest files: check for global override from environment variable MANIFEST_FILE, if this is set, it will take priority over defaults
     manifest_file_env = os.environ.get('MANIFEST_FILE')
