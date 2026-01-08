@@ -294,10 +294,10 @@ while [[ $# -gt 0 ]]; do
             LAYER="$2"
             shift 2
             ;;
-	-b|--branch)
+        -b|--branch)
             REPO_MANIFEST_BRANCH="$2"
-	    shift 2
-	    ;;
+            shift 2
+            ;;
         -r|--layer-repos)
             LAYER_REPOS="$2"
             shift 2
