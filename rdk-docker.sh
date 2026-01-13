@@ -146,12 +146,12 @@ setup() {
 
     # Get layer if not provided via CLI
     if [ -z "$LAYER" ]; then
-       get_input "Enter layer to build (oss/vendor/middleware/application/image-assembler)" "$DEFAULT_LAYER" "LAYER"
+        get_input "Enter layer to build (oss/vendor/middleware/application/image-assembler)" "$DEFAULT_LAYER" "LAYER"
     fi
 
     # Get branch if not provided via CLI
     if [ -z "$REPO_MANIFEST_BRANCH" ]; then
-       get_input "Enter branch to build (develop, feature, hotfix, tags)" "$DEFAULT_BRANCH" "REPO_MANIFEST_BRANCH"
+        get_input "Enter branch to build (develop, feature, hotfix, tags)" "$DEFAULT_BRANCH" "REPO_MANIFEST_BRANCH"
     fi
 
     # Handle per-layer repository selection
