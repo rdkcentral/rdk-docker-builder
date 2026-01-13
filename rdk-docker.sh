@@ -16,7 +16,6 @@ IMAGE_NAME="rdk-layer-builder"
 CONTAINER_NAME="rdk-layer-builder"
 
 # CLI variables
-HEADLESS=false
 LAYER=""
 LAYER_REPOS=""
 
@@ -69,7 +68,6 @@ Commands:
     help              Show this help
 
 Options:
-    -h, --headless                     Run in headless mode (no interactive prompts)
     -l, --layer LAYER                  Specify the layer to build (oss/vendor/middleware/application/image-assembler)
     -b, --branch BRANCH                Specify the manifest branch (default: develop)
     -r, --layer-repos REPOS            Specify repository types per layer (e.g., "oss:remote,vendor:local,...")
@@ -78,7 +76,7 @@ Examples:
     $0 create_image
     $0 setup                           # Interactive mode
     $0 setup -l oss -b develop         # Build OSS layer with develop branch
-    $0 -h -l application -r "oss:remote,vendor:remote,middleware:local,application:local" setup
+    $0 -l application -r "oss:remote,vendor:remote,middleware:local,application:local" setup
     $0 run                             # Run build process
     $0 run dependency                  # Generate dependency graph
 
@@ -148,22 +146,12 @@ setup() {
 
     # Get layer if not provided via CLI
     if [ -z "$LAYER" ]; then
-        if [ "$HEADLESS" = "true" ]; then
-            LAYER="$DEFAULT_LAYER"
-            print_info "Using default layer: $LAYER"
-        else
-            get_input "Enter layer to build (oss/vendor/middleware/application/image-assembler)" "$DEFAULT_LAYER" "LAYER"
-        fi
+       get_input "Enter layer to build (oss/vendor/middleware/application/image-assembler)" "$DEFAULT_LAYER" "LAYER"
     fi
 
     # Get branch if not provided via CLI
     if [ -z "$REPO_MANIFEST_BRANCH" ]; then
-        if [ "$HEADLESS" = "true" ]; then
-            REPO_MANIFEST_BRANCH="$DEFAULT_BRANCH"
-            print_info "Using default branch: $REPO_MANIFEST_BRANCH"
-        else
-            get_input "Enter branch to build (develop, feature, hotfix, tags)" "$DEFAULT_BRANCH" "REPO_MANIFEST_BRANCH"
-        fi
+       get_input "Enter branch to build (develop, feature, hotfix, tags)" "$DEFAULT_BRANCH" "REPO_MANIFEST_BRANCH"
     fi
 
     # Handle per-layer repository selection
@@ -171,7 +159,7 @@ setup() {
     if [ -n "$LAYER_REPOS" ]; then
         # Use provided layer repos from CLI
         layer_repos_arg="--layer-repos \"$LAYER_REPOS\""
-    elif [ "$HEADLESS" != "true" ]; then
+    else
         # Interactive mode: always ask for each layer
         local repo_config=""
         for layer in oss vendor middleware application; do
@@ -284,10 +272,6 @@ while [[ $# -gt 0 ]]; do
     case $1 in
         setup|run|create_image)
             COMMAND="$1"
-            shift
-            ;;
-        -h|--headless)
-            HEADLESS=true
             shift
             ;;
         -l|--layer)
