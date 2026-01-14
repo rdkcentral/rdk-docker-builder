@@ -59,7 +59,7 @@ export NON_OSS_IPK_LAYER="${build['machine']['model']}"
 
 # Layer directories (uses container paths)
 % for layer_name, layer in layers.items():
-export ${env_prefix[layer_name]}_DIR="${build['workspace-dir']}/${layer_name}-layer"
+export ${env_prefix[layer_name]}_DIR="${build['workspace-dir']}/${manifest_branch_env}/${layer_name}-layer"
 % endfor
 
 # IPK feed paths (uses container paths)
