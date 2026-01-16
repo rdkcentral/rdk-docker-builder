@@ -13,7 +13,7 @@ DEFAULT_TARGET="raspberrypi"
 DEFAULT_LAYER="oss"
 DEFAULT_BRANCH="develop"
 IMAGE_NAME="rdk-layer-builder"
-CONTAINER_NAME="rdk-layer-builder"
+CONTAINER_NAME="${CONTAINER_NAME:-rdk-layer-builder}"
 
 # CLI variables
 LAYER=""
@@ -216,7 +216,9 @@ docker_run_command() {
     fi
 
     # Provide a safe default container name (or remove --name entirely)
-    CONTAINER_NAME="${CONTAINER_NAME:-rdk-layer-builder}"
+    if [ -z "$CONTAINER_NAME" ]; then
+        CONTAINER_NAME="rdk-layer-builder-$(date +%s)-$$"
+    fi
 
     local user_id group_id workspace docker_opts
     user_id="$(id -u)"
