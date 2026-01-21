@@ -134,7 +134,7 @@ init_or_sync_layer() {
     # Load per-layer config (must set branch_var, manifest_dir, manifest_url_var, manifest_file_var, etc.)
     get_layer_config "$layer_name"
 
-    local layer_dir="/home/rdk/workspace/${REPO_MANIFEST_BRANCH}/${layer_name}-layer"
+    local layer_dir="/home/rdk/workspace/${REPO_MANIFEST_REF}/${layer_name}-layer"
     echo "layer_dir: $layer_dir"
     mkdir -p "$layer_dir" && cd "$layer_dir"
 
@@ -235,7 +235,7 @@ build_layer() {
     init_or_sync_layer "$layer_name"
 
     # Return to the layer workdir before sourcing env
-    local layer_dir="/home/rdk/workspace/${REPO_MANIFEST_BRANCH}/${layer_name}-layer"
+    local layer_dir="/home/rdk/workspace/${REPO_MANIFEST_REF}/${layer_name}-layer"
     cd "$layer_dir" || { print_error "Cannot cd to $layer_dir"; exit 1; }
 
     # Configure and build
@@ -453,7 +453,7 @@ create_ipk_feed() {
       ipk_layer="${NON_OSS_IPK_LAYER}"
     fi
 
-    local ipk_path="${IPK_DIR}/${ipk_layer}-${layer_name}/${REPO_MANIFEST_BRANCH}/ipk"
+    local ipk_path="${IPK_DIR}/${ipk_layer}-${layer_name}/${REPO_MANIFEST_REF}/ipk"
 
     print_info "Creating $layer_name IPK feed..."
     print_info "Starting IPK feed creation"
@@ -536,7 +536,7 @@ generate_dependency_graph() {
     print_info "Generating dependency graph for $layer_name layer..."
     
     # Setup directory and environment
-    local layer_dir="/home/rdk/workspace/${REPO_MANIFEST_BRANCH}/${layer_name}-layer"
+    local layer_dir="/home/rdk/workspace/${REPO_MANIFEST_REF}/${layer_name}-layer"
     cd "$layer_dir"
     
     print_info "Setting up $layer_name build environment..."

@@ -47,6 +47,13 @@ export IPK_DIR="${build['ipk-dir']}"
 export REPO_MANIFEST_BRANCH="${manifest_branch_env}"
 export MANIFEST_FILE="${manifest_file_get}"
 
+# Variable REPO_MANIFEST_BRANCH cannot contain '/'
+# '/' breaks builds, so replace it with '-'
+<%
+REPO_MANIFEST_REF = manifest_branch_env.replace('/', '-')
+%>
+export REPO_MANIFEST_REF="${REPO_MANIFEST_REF}"
+
 # IPK Path
 export OSS_IPK_VERSION="${oss_ipk_env}"
 export VENDOR_IPK_VERSION="${vendor_ipk_env}"
@@ -59,7 +66,7 @@ export NON_OSS_IPK_LAYER="${build['machine']['model']}"
 
 # Layer directories (uses container paths)
 % for layer_name, layer in layers.items():
-export ${env_prefix[layer_name]}_DIR="${build['workspace-dir']}/${manifest_branch_env}/${layer_name}-layer"
+export ${env_prefix[layer_name]}_DIR="${build['workspace-dir']}/${REPO_MANIFEST_REF}/${layer_name}-layer"
 % endfor
 
 # IPK feed paths (uses container paths)
