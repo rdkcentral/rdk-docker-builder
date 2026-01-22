@@ -199,8 +199,7 @@ docker_run_command() {
     local description="$2"
     local interactive="${3:-false}"
 
-    [ "$interactive" = "false" ]
-    print_info "$description"
+    [ "$interactive" = "false" ] && print_info "$description"
 
     # Check if build.env exists (except for shell command)
     if [ "$command" != "shell" ] && [ ! -f "build.env" ]; then
@@ -216,8 +215,8 @@ docker_run_command() {
     fi
 
     # Provide a safe default container name (or remove --name entirely)
-    if [ -z "$CONTAINER_NAME" ]; then
-        CONTAINER_NAME="rdk-layer-builder-$(date +%s)-$$"
+    if [ -z "$CONTAINER_NAME" ] || [ "$CONTAINER_NAME" = "rdk-layer-builder" ]; then
+        CONTAINER_NAME="rdk-layer-builder-$(date +%Y-%m-%d_%H.%M.%S)"
     fi
 
     local user_id group_id workspace docker_opts
@@ -258,6 +257,7 @@ sync() {
 }
 
 shell() {
+    print_info "Shell in RDK container..."
     docker_run_command "shell" "Starting shell in RDK container..." "true"
 }
 
@@ -272,7 +272,7 @@ trap cleanup SIGINT SIGTERM
 # Parse command line options
 while [[ $# -gt 0 ]]; do
     case $1 in
-        setup|run|create_image)
+        setup|run|create_image|shell|sync|help)
             COMMAND="$1"
             shift
             ;;
@@ -289,9 +289,6 @@ while [[ $# -gt 0 ]]; do
             shift 2
             ;;
         *)
-            # This is the command
-            COMMAND="$1"
-            shift
             break
             ;;
     esac
