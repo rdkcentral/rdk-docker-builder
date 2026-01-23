@@ -18,7 +18,8 @@ python 3.8
 - You will need enought storage space to perform the builds and store the IPK's generated.
     - the IPK's can be stored on a local or a remotely mounted filesystem
 
-Estimated OSS and RPI Layer storage requirements per IPK Feed and Layer Build
+Estimated OSS and RPI Layer storage requirements per IPK Feed and Layer Build:
+
 | Layer | IPK Size | Build Size |
 | ----------- | ----------- | ----------- |
 | OSS | 873 MB | 84 GB |
@@ -28,10 +29,6 @@ Estimated OSS and RPI Layer storage requirements per IPK Feed and Layer Build
 | Image Assembler | NA | 28 GB |
 
 NOTE this docker setup has only been tested on UBUNTU 20.04 
-
-```
-TODO - give detailed storage requirements, lets check what other python version we can use
-```
 
 ---
 ## Quick Start
@@ -153,7 +150,7 @@ export MIDDLEWARE_IPK_VERSION=develop          # Middleware IPK version for pack
 export APPLICATION_IPK_VERSION=develop         # Application IPK version for Packaging
 
 # once you set the overrides then run setup
-./rdk-docker.sh setup
+./rdk-docker.sh setup -l <layer> -b <layer manifest branch or tag>
 ```
 
 ---
@@ -165,24 +162,19 @@ If you do not explicity set the IPK versions before you build then the DEFAULT I
 
 However in this case unless you have built the dependant layer default version the build will fail.
 
-Note the default version of the layer may and most likely will be different depending on the BRANCH or TAG of the layer manifest you are building for that layer.
+Note the default version of the layer may and most likely will be different depending on the BRANCH or TAG of the layer manifest you are building for that layer. (examplex from develop branch given below)
 
-```
-TODO explain how to identity the default versions from the .inc files 
-
-```
-### Overriding Default Parameters
-```bash
-# Set environment variables for OSS layer build
-export IMAGE_NAME=rdk-layer-builder:latest     # Docker image name for the build environment
-export REPO_MANIFEST_BRANCH=4.9.0              # Branch or tag name for OSS layer (matches REVISION_MODE)
-```
+| Layer | INC File | Meta Layer |
+| ----------- | ----------- | ----------- |
+| Vendor | [vendor.inc](https://github.com/rdkcentral/meta-vendor-raspberrypi-release/blob/develop/conf/machine/include/vendor.inc) | [meta-vendor-raspberrypi-release](https://github.com/rdkcentral/meta-vendor-raspberrypi-release/) |
+| Middleware | [middleware.inc](https://github.com/rdkcentral/meta-middleware-release-rdke/blob/develop/conf/machine/include/middleware.inc)| [meta-middleware-release-rdke](https://github.com/rdkcentral/meta-middleware-release-rdke/) |
+| Application | [application.inc](https://github.com/rdkcentral/meta-application-rdke-release/blob/develop/conf/machine/include/application.inc) | [meta-application-rdke-release](https://github.com/rdkcentral/meta-application-rdke-release/) |
 
 ### Using Remote Versus Local IPK's
 ```
 The current release of rdk-docker-builder does not support using IPK's from a remote location (e.g. artifactory, http server)
 
-This will be supported in the next version in 2026 Q2.
+This will be supported in the next version due in 2026 Q2 timeframe.
 ```
 
 ### Running multiple docker builds at same time
@@ -193,7 +185,7 @@ All build output for your layer is accessible form your local filesystem, i.e. y
 The layer build output available in your clone in the following location.
 
 ```
-<WORKSPACE>/rdk-docker-builder/<branch or tag>/<layer>-layer/build-raspberrypi4-64-rdke
+<WORKSPACE>/rdk-docker-builder/<manifest branch or tag>/<layer>-layer/build-raspberrypi4-64-rdke
 ```
 
 ### How to make changes in your build environment
