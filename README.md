@@ -180,25 +180,20 @@ export REPO_MANIFEST_BRANCH=4.9.0              # Branch or tag name for OSS laye
 
 ### Using Remote Versus Local IPK's
 ```
-TODO
-```
+The current release of rdk-docker-builder does not support using IPK's from a remote location (e.g. artifactory, http server)
 
-### Building Different Layer Versions
-```
-TODO
+This will be supported in the next version in 2026 Q2.
 ```
 
 ### Running multiple docker builds at same time
-```
-TODO
-```
+Each time you call `./rdk-docker.sh run` it creates a new container using the date and time so each layer build will run in its own container, however running multiple builds at the same time may impact on performance.
 
 ### How to view build logs and build output
 All build output for your layer is accessible form your local filesystem, i.e. you do not need to have the container running to view logs and retrieve images.
 The layer build output available in your clone in the following location.
 
 ```
-<WORKSPACE>/rdk-docker-builder/<layer>-layer/build-raspberrypi4-64-rdke
+<WORKSPACE>/rdk-docker-builder/<branch or tag>/<layer>-layer/build-raspberrypi4-64-rdke
 ```
 
 ### How to make changes in your build environment
@@ -210,20 +205,14 @@ The layer source code is available in your clone in the following location.
 ```
 
 ### How to get a shell within the docker environment
+If you wish to work in the container environment which has the build host setup, simply run
 ```
-TODO
+./rdk-docker.sh shell
 ```
 
 ### Docker Runtime Info
 The docker runtime user is `rdk` and home directory is `/home/rdk`
-The external IPK location is mounted in the following location `/home/rdk/ipks`
-
----
-## Configuration
-
-The build process uses:
-- `config.yaml` - Main build configuration
-- `generate-rdk-build-env` - Python script to generate build environment (build.env)
+The external IPK location is mounted in the following location `/home/rdk/ipks` which maps to `${HOME}/ipks`
 
 ### Supported Layers
 - **oss**: Open Source Software Layer
