@@ -197,7 +197,7 @@ The layer source code is available in your clone in the following location.
 ```
 
 ### How to get a shell within the docker environment
-If you wish to work in the container environment which has the build host setup, simply run
+If you wish to work in the container environment in interactive mode simply run
 ```
 ./rdk-docker.sh shell
 ```
