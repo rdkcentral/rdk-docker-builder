@@ -10,8 +10,8 @@ It is assumed the user is familiar with the RDK-E Layered Architeture. If not pl
 
 [Docker](https://www.docker.com/get-started/) must be installed on your host system
 
-- You will need enought storage space to perform the builds and store the IPK's generated.
-    - the IPK's can be stored on a local or a remotely mounted filesystem
+You will need enought storage space to perform the builds and store the IPK's generated. 
+The IPK's can be stored on a local or a remotely mounted filesystem
 
 Estimated OSS and RPI Layer storage requirements per IPK Feed and Layer Build:
 
@@ -23,7 +23,8 @@ Estimated OSS and RPI Layer storage requirements per IPK Feed and Layer Build:
 | Application | 6.3 MB | 57 GB |
 | Image Assembler | NA | 28 GB |
 
-NOTE this docker setup has only been tested on UBUNTU 20.04 
+Systems Tested:
+This docker setup has been tested on Ubuntu 20.04 
 
 ---
 ## Quick Start
@@ -91,6 +92,9 @@ git clone https://github.com/rdkcentral/rdk-docker-builder.git
 
 # create the RDK Layer Build Docker Image
 ./rdk-docker.sh create_image
+
+# if you wish to delete the image run
+docker rmi -f rdk-layer-builder
 ```
 
 ---
