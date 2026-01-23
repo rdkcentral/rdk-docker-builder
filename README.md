@@ -63,8 +63,9 @@ downloads                  # build downloads directory
 rdke                       # layer source directory
 scripts                    # layer scripts directory
 sstate-cache               # build sstate cache directory
-
 ```
+
+The IPK Packages Feed for the layer will be stored in `$HOME/ipks`, please refer to the diagram in the next section for IPK Feed output directory structure.
 
 ---
 ## RDK Layer Build Docker Overview
