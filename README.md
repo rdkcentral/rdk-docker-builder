@@ -16,7 +16,16 @@ python 3.8
 ```
 
 - You will need enought storage space to perform the builds and store the IPK's generated.
-    - the IPK's can be stored on a locally mounted or a remote filesystem
+    - the IPK's can be stored on a local or a remotely mounted filesystem
+
+Estimated OSS and RPI Layer storage requirements per IPK Feed and Layer Build
+| Layer | IPK Size | Build Size |
+| ----------- | ----------- | ----------- |
+| OSS | 873 MB | 84 GB |
+| Vendor | 144 MB | 52 GB |
+| Middleware | 394 MB| 121 GB |
+| Application | 6.3 MB | 57 GB |
+| Image Assembler | NA | 28 GB |
 
 NOTE this docker setup has only been tested on UBUNTU 20.04 
 
@@ -30,7 +39,7 @@ TODO - give detailed storage requirements, lets check what other python version 
 ```bash
 # identify an IPK storage location accessible on your filesystem and softlink it from your /home/<user> directory
 cd $HOME
-ln -s <PATH TO IPK STORAGE> community
+ln -s <PATH TO IPK STORAGE> ipks
 
 cd <WORKSPACE>
 # clone the docker repo
@@ -41,17 +50,17 @@ cd rdk-docker-builder
 ./rdk-docker.sh create_image
 
 # configure the layer build environment 
-./rdk-docker.sh setup
+./rdk-docker.sh setup -l <layer> -b <manifest branch or tag>
 
 # build the layer and generate the layer IPK's and layer images
 ./rdk-docker.sh run
 ```
 
-The source code and build output for the layer will be stored in a `<layer>-layer/` directory within your git clone, e.g. for a vendor layer build:
+The source code and build output for the layer will be stored in a `<manifest>/<layer>-layer/` directory within your git clone, e.g. for a vendor layer build:
 ```bash
-<WORKSPACE>/rdk-docker-builder/vendor-layer
+<WORKSPACE>/rdk-docker-builder/develop/vendor-layer
 
-ls <WORKSPACE>/rdk-docker-builder/vendor-layer
+ls <WORKSPACE>/rdk-docker-builder/develop/vendor-layer
 build-raspberrypi4-64-rdke # build output directory
 downloads                  # build downloads directory
 rdke                       # layer source directory
@@ -62,9 +71,7 @@ sstate-cache               # build sstate cache directory
 
 ---
 ## RDK Layer Build Docker Overview
-```
-TODO add pic showing how it all fits together
-``` 
+![RDK Docker Builder Overview](assets/rdk-docker-builder.jpgimage.jpg)
 
 ---
 ## IPK Storage Setup 
@@ -74,13 +81,13 @@ This location needs to have enough storage space to hold the IPK's. Once identif
 
 ```bash
 cd $HOME
-ln -s <PATH TO IPK STORAGE> community
+ln -s <PATH TO IPK STORAGE> ipks
 ```
 
 example:
 ```bash
 ls -al $HOME
-lrwxrwxrwx  1 jenkins jenkins    45 Jan  7 10:37 community -> /home/jenkins/jenkinsroot/workspace/community
+lrwxrwxrwx  1 jenkins jenkins    45 Jan  7 10:37 ipks -> /home/jenkins/jenkinsroot/workspace/ipks
 ```
 
 ---
@@ -102,7 +109,7 @@ There are two phases to the layer build process
     - creates a `build.env` file which is used as input to the *run* phase
 - *run* 
    - runs the docker which in turns automatically triggers the layer build 
-   - once complete will store the IPK's as per your `~/$HOME/community` directory location
+   - once complete will store the IPK's as per your `~/$HOME/ipks` directory location
    - the image can be retreived from the build output directory
 
 
@@ -210,7 +217,7 @@ TODO
 
 ### Docker Runtime Info
 The docker runtime user is `rdk` and home directory is `/home/rdk`
-The external IPK location is mounted in the following location `/home/rdk/community`
+The external IPK location is mounted in the following location `/home/rdk/ipks`
 
 ---
 ## Configuration

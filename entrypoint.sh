@@ -100,7 +100,7 @@ get_layer_config() {
             image_name="lib32-rdk-fullstack-image"
             ;;
         *)
-            print_error "Unknown layer ${layer_name} . Supported layer: oss, vendor, middleware, application, image-assembler."
+            print_error "Unknown layer ${layer_name} . Supported layers: oss, vendor, middleware, application, image-assembler."
 	    return 1
 	    ;;
     esac
@@ -351,7 +351,7 @@ configure_ipk_feeds() {
              rdke/common/meta-rdk-oss-reference/conf/include/package_revisions_oss.inc)
 
          if [ -z "$OSS_IPK_VERSION" ] || [ "$OSS_IPK_VERSION" = "None" ]; then
-             oss_path="file://${HOME}/community/rdk-arm64-oss/${OSS_LAYER_VERSION}/ipk"
+             oss_path="file://${HOME}/ipks/rdk-arm64-oss/${OSS_LAYER_VERSION}/ipk"
          else
              oss_path="file://${OSS_IPK_PATH}"
          fi
@@ -362,7 +362,7 @@ configure_ipk_feeds() {
              rdke/vendor/meta-vendor-release/conf/machine/include/vendor.inc)
 
          if [ -z "$VENDOR_IPK_VERSION" ] || [ "$VENDOR_IPK_VERSION" = "None" ]; then
-             vendor_path="file://${HOME}/community/raspberrypi4-64-rdke-vendor/${VENDOR_LAYER_VERSION}/ipk"
+             vendor_path="file://${HOME}/ipks/raspberrypi4-64-rdke-vendor/${VENDOR_LAYER_VERSION}/ipk"
          else
              vendor_path="file://${VENDOR_IPK_PATH}"
          fi
@@ -373,7 +373,7 @@ configure_ipk_feeds() {
              rdke/middleware/meta-middleware-release/conf/machine/include/middleware.inc)
 
          if [ -z "$MIDDLEWARE_IPK_VERSION" ] || [ "$MIDDLEWARE_IPK_VERSION" = "None" ]; then
-             middleware_path="file://${HOME}/community/raspberrypi4-64-rdke-middleware/${MW_RELEASE_NUM}/ipk"
+             middleware_path="file://${HOME}/ipks/raspberrypi4-64-rdke-middleware/${MW_RELEASE_NUM}/ipk"
          else
              middleware_path="file://${MIDDLEWARE_IPK_PATH}"
          fi
@@ -384,7 +384,7 @@ configure_ipk_feeds() {
              rdke/application/meta-application-release/conf/machine/include/application.inc)
 
          if [ -z "$APPLICATION_IPK_VERSION" ] || [ "$APPLICATION_IPK_VERSION" = "None" ]; then
-             application_path="file://${HOME}/community/raspberrypi4-64-rdke-application/${APPLICATION_LAYER_VERSION}/ipk"
+             application_path="file://${HOME}/ipks/raspberrypi4-64-rdke-application/${APPLICATION_LAYER_VERSION}/ipk"
          else
              application_path="file://${APPLICATION_IPK_PATH}"
          fi
