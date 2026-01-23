@@ -71,7 +71,7 @@ sstate-cache               # build sstate cache directory
 
 ---
 ## RDK Layer Build Docker Overview
-![RDK Docker Builder Overview](assets/rdk-docker-builder.jpgimage.jpg)
+![RDK Docker Builder Overview](assets/rdk-docker-builder.jpg)
 
 ---
 ## IPK Storage Setup 
@@ -120,7 +120,7 @@ git clone https://github.com/rdkcentral/rdk-docker-builder.git
 cd rdk-docker-builder
 
 # setup: configure the build environment (select layer: oss/vendor/middleware/application/image-assembler)
-./rdk-docker.sh setup
+./rdk-docker.sh setup -l oss -b 4.9.0
 
 # run: build the layer and generate the IPK's and Layer Images
 ./rdk-docker.sh run
@@ -129,9 +129,8 @@ cd rdk-docker-builder
 NOTES
 - You must build the layers in order 
     - OSS, VENDOR, MIDDLEWARE, APPLICATION, IMAGE ASSEMBLER
-- If you want to build a different layer you must re-run setup before running run 
-- If you want to rebuild the same layer using a different manifest branch then you must move/rename or delete the existing `<layer>-layer` directory
-    - alternatively you could do the build in a new clone  path of the docker repo
+- If you want to build a different layer you must re-run setup before running run
+- if the branch name has a `/` it will be replaced with `-` on the filesystem e.g. `feature/test-branch` will be `feature-test-branch`
 - If you wish to override the default versions of IPK used for a layer you must set them explicitly before you do the *setup* phase
 ```bash
 
