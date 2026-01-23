@@ -160,7 +160,7 @@ export APPLICATION_IPK_VERSION=develop         # Application IPK version for Pac
 
 If you do not explicity set the IPK versions before you build then the DEFAULT IPK versions from `<layer>.inc` files will be used.
 
-The default version of the layer may and most likely will be different depending on the BRANCH or TAG of the layer manifest you are building for that layer. (examplex from develop branch given below)
+The default version of the layer may and most likely will be different depending on the BRANCH or TAG of the layer manifest you are building for that layer. (examples from develop branch given below)
 
 | Layer | INC File | Meta Layer |
 | ----------- | ----------- | ----------- |
