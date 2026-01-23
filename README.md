@@ -16,13 +16,19 @@ python 3.8
 ```
 
 - You will need enought storage space to perform the builds and store the IPK's generated.
-    - the IPK's can be stored on a locally mounted or a remote filesystem
+    - the IPK's can be stored on a local or a remotely mounted filesystem
+
+Estimated OSS and RPI Layer storage requirements per IPK Feed and Layer Build:
+
+| Layer | IPK Size | Build Size |
+| ----------- | ----------- | ----------- |
+| OSS | 873 MB | 84 GB |
+| Vendor | 144 MB | 52 GB |
+| Middleware | 394 MB| 121 GB |
+| Application | 6.3 MB | 57 GB |
+| Image Assembler | NA | 28 GB |
 
 NOTE this docker setup has only been tested on UBUNTU 20.04 
-
-```
-TODO - give detailed storage requirements, lets check what other python version we can use
-```
 
 ---
 ## Quick Start
@@ -30,7 +36,7 @@ TODO - give detailed storage requirements, lets check what other python version 
 ```bash
 # identify an IPK storage location accessible on your filesystem and softlink it from your /home/<user> directory
 cd $HOME
-ln -s <PATH TO IPK STORAGE> community
+ln -s <PATH TO IPK STORAGE> ipks
 
 cd <WORKSPACE>
 # clone the docker repo
@@ -41,17 +47,17 @@ cd rdk-docker-builder
 ./rdk-docker.sh create_image
 
 # configure the layer build environment 
-./rdk-docker.sh setup
+./rdk-docker.sh setup -l <layer> -b <manifest branch or tag>
 
 # build the layer and generate the layer IPK's and layer images
 ./rdk-docker.sh run
 ```
 
-The source code and build output for the layer will be stored in a `<layer>-layer/` directory within your git clone, e.g. for a vendor layer build:
+The source code and build output for the layer will be stored in a `<manifest>/<layer>-layer/` directory within your git clone, e.g. for a vendor layer build:
 ```bash
-<WORKSPACE>/rdk-docker-builder/vendor-layer
+<WORKSPACE>/rdk-docker-builder/develop/vendor-layer
 
-ls <WORKSPACE>/rdk-docker-builder/vendor-layer
+ls <WORKSPACE>/rdk-docker-builder/develop/vendor-layer
 build-raspberrypi4-64-rdke # build output directory
 downloads                  # build downloads directory
 rdke                       # layer source directory
@@ -62,9 +68,7 @@ sstate-cache               # build sstate cache directory
 
 ---
 ## RDK Layer Build Docker Overview
-```
-TODO add pic showing how it all fits together
-``` 
+![RDK Docker Builder Overview](assets/rdk-docker-builder.jpg)
 
 ---
 ## IPK Storage Setup 
@@ -74,13 +78,13 @@ This location needs to have enough storage space to hold the IPK's. Once identif
 
 ```bash
 cd $HOME
-ln -s <PATH TO IPK STORAGE> community
+ln -s <PATH TO IPK STORAGE> ipks
 ```
 
 example:
 ```bash
 ls -al $HOME
-lrwxrwxrwx  1 jenkins jenkins    45 Jan  7 10:37 community -> /home/jenkins/jenkinsroot/workspace/community
+lrwxrwxrwx  1 jenkins jenkins    45 Jan  7 10:37 ipks -> /home/jenkins/jenkinsroot/workspace/ipks
 ```
 
 ---
@@ -102,7 +106,7 @@ There are two phases to the layer build process
     - creates a `build.env` file which is used as input to the *run* phase
 - *run* 
    - runs the docker which in turns automatically triggers the layer build 
-   - once complete will store the IPK's as per your `~/$HOME/community` directory location
+   - once complete will store the IPK's as per your `~/$HOME/ipks` directory location
    - the image can be retreived from the build output directory
 
 
@@ -113,7 +117,7 @@ git clone https://github.com/rdkcentral/rdk-docker-builder.git
 cd rdk-docker-builder
 
 # setup: configure the build environment (select layer: oss/vendor/middleware/application/image-assembler)
-./rdk-docker.sh setup
+./rdk-docker.sh setup -l oss -b 4.9.0
 
 # run: build the layer and generate the IPK's and Layer Images
 ./rdk-docker.sh run
@@ -122,9 +126,8 @@ cd rdk-docker-builder
 NOTES
 - You must build the layers in order 
     - OSS, VENDOR, MIDDLEWARE, APPLICATION, IMAGE ASSEMBLER
-- If you want to build a different layer you must re-run setup before running run 
-- If you want to rebuild the same layer using a different manifest branch then you must move/rename or delete the existing `<layer>-layer` directory
-    - alternatively you could do the build in a new clone  path of the docker repo
+- If you want to build a different layer you must re-run setup before running run
+- if the branch name has a `/` it will be replaced with `-` on the filesystem e.g. `feature/test-branch` will be `feature-test-branch`
 - If you wish to override the default versions of IPK used for a layer you must set them explicitly before you do the *setup* phase
 ```bash
 
@@ -147,7 +150,7 @@ export MIDDLEWARE_IPK_VERSION=develop          # Middleware IPK version for pack
 export APPLICATION_IPK_VERSION=develop         # Application IPK version for Packaging
 
 # once you set the overrides then run setup
-./rdk-docker.sh setup
+./rdk-docker.sh setup -l <layer> -b <layer manifest branch or tag>
 ```
 
 ---
@@ -159,40 +162,30 @@ If you do not explicity set the IPK versions before you build then the DEFAULT I
 
 However in this case unless you have built the dependant layer default version the build will fail.
 
-Note the default version of the layer may and most likely will be different depending on the BRANCH or TAG of the layer manifest you are building for that layer.
+Note the default version of the layer may and most likely will be different depending on the BRANCH or TAG of the layer manifest you are building for that layer. (examplex from develop branch given below)
 
-```
-TODO explain how to identity the default versions from the .inc files 
-
-```
-### Overriding Default Parameters
-```bash
-# Set environment variables for OSS layer build
-export IMAGE_NAME=rdk-layer-builder:latest     # Docker image name for the build environment
-export REPO_MANIFEST_BRANCH=4.9.0              # Branch or tag name for OSS layer (matches REVISION_MODE)
-```
+| Layer | INC File | Meta Layer |
+| ----------- | ----------- | ----------- |
+| Vendor | [vendor.inc](https://github.com/rdkcentral/meta-vendor-raspberrypi-release/blob/develop/conf/machine/include/vendor.inc) | [meta-vendor-raspberrypi-release](https://github.com/rdkcentral/meta-vendor-raspberrypi-release/) |
+| Middleware | [middleware.inc](https://github.com/rdkcentral/meta-middleware-release-rdke/blob/develop/conf/machine/include/middleware.inc)| [meta-middleware-release-rdke](https://github.com/rdkcentral/meta-middleware-release-rdke/) |
+| Application | [application.inc](https://github.com/rdkcentral/meta-application-rdke-release/blob/develop/conf/machine/include/application.inc) | [meta-application-rdke-release](https://github.com/rdkcentral/meta-application-rdke-release/) |
 
 ### Using Remote Versus Local IPK's
 ```
-TODO
-```
+The current release of rdk-docker-builder does not support using IPK's from a remote location (e.g. artifactory, http server)
 
-### Building Different Layer Versions
-```
-TODO
+This will be supported in the next version due in 2026 Q2 timeframe.
 ```
 
 ### Running multiple docker builds at same time
-```
-TODO
-```
+Each time you call `./rdk-docker.sh run` it creates a new container using the date and time so each layer build will run in its own container, however running multiple builds at the same time may impact on performance.
 
 ### How to view build logs and build output
 All build output for your layer is accessible form your local filesystem, i.e. you do not need to have the container running to view logs and retrieve images.
 The layer build output available in your clone in the following location.
 
 ```
-<WORKSPACE>/rdk-docker-builder/<layer>-layer/build-raspberrypi4-64-rdke
+<WORKSPACE>/rdk-docker-builder/<manifest branch or tag>/<layer>-layer/build-raspberrypi4-64-rdke
 ```
 
 ### How to make changes in your build environment
@@ -204,20 +197,14 @@ The layer source code is available in your clone in the following location.
 ```
 
 ### How to get a shell within the docker environment
+If you wish to work in the container environment which has the build host setup, simply run
 ```
-TODO
+./rdk-docker.sh shell
 ```
 
 ### Docker Runtime Info
 The docker runtime user is `rdk` and home directory is `/home/rdk`
-The external IPK location is mounted in the following location `/home/rdk/community`
-
----
-## Configuration
-
-The build process uses:
-- `config.yaml` - Main build configuration
-- `generate-rdk-build-env` - Python script to generate build environment (build.env)
+The external IPK location is mounted in the following location `/home/rdk/ipks` which maps to `${HOME}/ipks`
 
 ### Supported Layers
 - **oss**: Open Source Software Layer

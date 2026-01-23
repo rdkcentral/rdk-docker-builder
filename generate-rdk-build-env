@@ -170,14 +170,14 @@ Dependencies:
     parser.add_argument(
         "--branch",
         "-b",
-        help="Set manifest branch to use (e.g., develop, feature, hotfix, tags/v1.2.3)",
+        help="Set manifest branch or tag to use (e.g., develop, feature/*, hotfix/*, release/*, 4.9.0)",
         required=True,
     )
 
     parser.add_argument(
         "--layer-repos",
         "-R",
-        help="Set package repository type for each layer (format: oss:remote,vendor:local,...)",
+        help="Set IPK package repository type (local or remote) for each layer (format: oss:remote,vendor:local,...)",
         default="",
     )
 
@@ -194,7 +194,7 @@ Dependencies:
     )
 
     parser.add_argument(
-        "--version", action="version", version="RDK Setup Script 1.0.0"
+        "--version", action="version", version="RDK Docker Build Setup Script 1.0.0"
     )
 
     return parser
@@ -219,7 +219,7 @@ def main() -> None:
                 if layer_name not in config['layers']:
                     config['layers'][layer_name] = {}
                 config['layers'][layer_name]['repository-type'] = layer_repos[layer_name]
-                Log.info(f"Setting {layer_name} pacakge source repository type to: {layer_repos[layer_name]}")
+                Log.info(f"Setting {layer_name} IPK package source repository type to: {layer_repos[layer_name]}")
             else:
                 # Set default if not specified
                 if 'repository-type' not in config['layers'][layer_name]:

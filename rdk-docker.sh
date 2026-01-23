@@ -64,7 +64,7 @@ Commands:
     run               Run the RDK Layer Build Process (runs inside container using build.env from setup step)
     run dependency    Generate dependency graph instead of building (inside container)
     sync              Sync the configured layer without building (inside container)
-    shell             Drop into a shell in the container
+    shell             Drop into a shell in a container instance
     help              Show this help
 
 Options:
@@ -84,7 +84,7 @@ EOF
 }
 
 create_image() {
-    print_info "Building RDK Docker image with user mapping..."
+    print_info "Building RDK Docker image ..."
     
     local user_id=$(id -u)
     local group_id=$(id -g)
@@ -95,7 +95,7 @@ create_image() {
         --build-arg USERNAME="rdk" \
         -t "$IMAGE_NAME" .
     
-    print_success "Docker image built: $IMAGE_NAME"
+    print_success "RDK Docker image built: $IMAGE_NAME"
 }
 
 # Helper function to check if local IPK directory exists and has content
@@ -235,7 +235,7 @@ docker_run_command() {
         -v "$HOME/.ssh:/home/rdk/.ssh:ro" \
         -v "$HOME/.gitconfig:/home/rdk/.gitconfig:ro" \
         -v "$HOME/.netrc:/home/rdk/.netrc:ro" \
-        -v "$HOME/community:/home/rdk/community" \
+        -v "$HOME/ipks:/home/rdk/ipks" \
         -e USER_ID="$user_id" \
         -e GROUP_ID="$group_id" \
         -e REPO_MANIFEST_BRANCH="${REPO_MANIFEST_BRANCH:-}" \
