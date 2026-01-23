@@ -8,12 +8,7 @@ It is assumed the user is familiar with the RDK-E Layered Architeture. If not pl
 ---
 ## Prequesites
 
-The following must be installed on your host system
-
-```bash
-docker 
-python 3.8 
-```
+[Docker](https://www.docker.com/get-started/) must be installed on your host system
 
 - You will need enought storage space to perform the builds and store the IPK's generated.
     - the IPK's can be stored on a local or a remotely mounted filesystem
@@ -127,7 +122,7 @@ cd rdk-docker-builder
 NOTES
 - You must build the layers in order 
     - OSS, VENDOR, MIDDLEWARE, APPLICATION, IMAGE ASSEMBLER
-- If you want to build a different layer you must re-run setup before running run
+- If you want to build a different layer you must re-run `./rdk-docker.sh setup` before running `./rdk-docker.sh run`
 - if the branch name has a `/` it will be replaced with `-` on the filesystem e.g. `feature/test-branch` will be `feature-test-branch`
 - If you wish to override the default versions of IPK used for a layer you must set them explicitly before you do the *setup* phase
 ```bash
@@ -161,15 +156,15 @@ export APPLICATION_IPK_VERSION=develop         # Application IPK version for Pac
 
 If you do not explicity set the IPK versions before you build then the DEFAULT IPK versions from `<layer>.inc` files will be used.
 
-However in this case unless you have built the dependant layer default version the build will fail.
-
-Note the default version of the layer may and most likely will be different depending on the BRANCH or TAG of the layer manifest you are building for that layer. (examplex from develop branch given below)
+The default version of the layer may and most likely will be different depending on the BRANCH or TAG of the layer manifest you are building for that layer. (examplex from develop branch given below)
 
 | Layer | INC File | Meta Layer |
 | ----------- | ----------- | ----------- |
 | Vendor | [vendor.inc](https://github.com/rdkcentral/meta-vendor-raspberrypi-release/blob/develop/conf/machine/include/vendor.inc) | [meta-vendor-raspberrypi-release](https://github.com/rdkcentral/meta-vendor-raspberrypi-release/) |
 | Middleware | [middleware.inc](https://github.com/rdkcentral/meta-middleware-release-rdke/blob/develop/conf/machine/include/middleware.inc)| [meta-middleware-release-rdke](https://github.com/rdkcentral/meta-middleware-release-rdke/) |
 | Application | [application.inc](https://github.com/rdkcentral/meta-application-rdke-release/blob/develop/conf/machine/include/application.inc) | [meta-application-rdke-release](https://github.com/rdkcentral/meta-application-rdke-release/) |
+
+*However in this case unless you have built the dependant layer default version the build will fail.*
 
 ### Using Remote Versus Local IPK's
 ```
