@@ -7,7 +7,7 @@
     import os
     import re
 
-    # For OSS tags >= 4.9.0, develop and feature branch by default use the rdk-oss.xml instead of the rdk-arm.xml manifest.
+    # For the OSS layer, use rdk-oss.xml for develop/feature branches and for version tags >= 4.9.0; otherwise use rdk-arm.xml.
     OSS_VERSION_CUTOFF = (4, 9, 0)
     ARM_MANIFEST = 'rdk-arm.xml'
     OSS_MANIFEST = 'rdk-oss.xml'
