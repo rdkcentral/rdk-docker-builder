@@ -370,7 +370,7 @@ configure_ipk_feeds() {
 
          if [ -z "$MIDDLEWARE_IPK_VERSION" ] || [ "$MIDDLEWARE_IPK_VERSION" = "None" ]; then
              middleware_path="file://${HOME}/ipks/raspberrypi4-64-rdke-middleware/${MW_RELEASE_NUM}/ipk"
-             middleware_oss_path="file://${HOME}/ipks/rdk-arm64-oss-middleware/raspberrypi4-64-rdke-middleware/${MW_RELEASE_NUM}/ipk"
+             middleware_oss_path="file://${HOME}/ipks/${OSS_IPK_DIR}-middleware/raspberrypi4-64-rdke-middleware/${MW_RELEASE_NUM}/ipk"
          else
              middleware_path="file://${MIDDLEWARE_IPK_PATH}"
              middleware_oss_path="file://${MIDDLEWARE_OSS_IPK_PATH}"
