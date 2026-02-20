@@ -544,7 +544,7 @@ create_ipk_feed() {
 
 	if [[ "$ENABLE_OSS_SOURCE" == "true" ]]
 	then
-	    print_info "Destination oss feed directory from $OSS_IPK_DIR-$layer_name to $oss_ipk_path"
+	    print_info "Syncing OSS IPK packages from ${BUILD_IPK_DIR}/${OSS_IPK_DIR}-${layer_name}/ to ${oss_ipk_path}"
 	    rsync -av "$BUILD_IPK_DIR/$OSS_IPK_DIR-$layer_name/" "$oss_ipk_path"
 	fi
     fi
