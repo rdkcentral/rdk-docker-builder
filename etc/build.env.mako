@@ -14,7 +14,11 @@
     # Branches (env-first)
     manifest_branch_env = os.environ.get('REPO_MANIFEST_BRANCH', target_branch)
 
+    # OSS can be consumed as either source (new consumption model) or IPK feed (existing consumption model)
     enable_oss_source = os.environ.get("ENABLE_OSS_SOURCE", "true")
+
+    # ENABLE_APPLICATION_LAYER to manage application layer dependencies from IA builds.
+    enable_application_layer = os.environ.get("ENABLE_APPLICATION_LAYER", "false")
 
     # Manifest files: check for global override from environment variable MANIFEST_FILE, if this is set, it will take priority over defaults
     manifest_file_env = os.environ.get('MANIFEST_FILE')
@@ -49,6 +53,9 @@ export OSS_IPK_DIR="${build['oss-ipk-dir']}"
 # If ENABLE_OSS_SOURCE isn't set, default to true.
 export ENABLE_OSS_SOURCE="${enable_oss_source}"
 
+# If ENABLE_APPLICATION_LAYER isn't set, default to false.
+export ENABLE_APPLICATION_LAYER="${enable_application_layer}"
+
 # Mode, Branches and Manifest
 export REPO_MANIFEST_BRANCH="${manifest_branch_env}"
 export MANIFEST_FILE="${manifest_file_get}"
@@ -81,13 +88,13 @@ export ${env_prefix[layer_name]}_DIR="${build['workspace-dir']}/${REPO_MANIFEST_
 export ${env_prefix[layer_name]}_IPK_PATH="${build['ipk-dir']}/${build['machine']['arch']}-${layer_name}/${oss_ipk_env}/ipk"
 % elif layer_name == 'vendor':
 export ${env_prefix[layer_name]}_IPK_PATH="${build['ipk-dir']}/${build['machine']['model']}-${layer_name}/${vendor_ipk_env}/ipk"
-export ${env_prefix[layer_name]}_OSS_IPK_PATH="${build['ipk-dir']}/${build['oss-ipk-dir']}-${layer_name}/${build['machine']['model']}-${layer_name}/${vendor_ipk_env}/ipk"
+export ${env_prefix[layer_name]}_OSS_IPK_PATH="${build['ipk-dir']}/${build['oss-ipk-dir']}-${layer_name}/${build['machine']['model']}-${layer_name}/OSStobedefined/${vendor_ipk_env}/ipk"
 % elif layer_name == 'middleware':
 export ${env_prefix[layer_name]}_IPK_PATH="${build['ipk-dir']}/${build['machine']['model']}-${layer_name}/${middleware_ipk_env}/ipk"
-export ${env_prefix[layer_name]}_OSS_IPK_PATH="${build['ipk-dir']}/${build['oss-ipk-dir']}-${layer_name}/${build['machine']['model']}-${layer_name}/${middleware_ipk_env}/ipk"
+export ${env_prefix[layer_name]}_OSS_IPK_PATH="${build['ipk-dir']}/${build['oss-ipk-dir']}-${layer_name}/${build['machine']['model']}-${layer_name}/OSStobedefined/${middleware_ipk_env}/ipk"
 % elif layer_name == 'application':
 export ${env_prefix[layer_name]}_IPK_PATH="${build['ipk-dir']}/${build['machine']['model']}-${layer_name}/${application_ipk_env}/ipk"
-export ${env_prefix[layer_name]}_OSS_IPK_PATH="${build['ipk-dir']}/${build['oss-ipk-dir']}-${layer_name}/${build['machine']['model']}-${layer_name}/${application_ipk_env}/ipk"
+export ${env_prefix[layer_name]}_OSS_IPK_PATH="${build['ipk-dir']}/${build['oss-ipk-dir']}-${layer_name}/${build['machine']['model']}-${layer_name}/OSStobedefined/${application_ipk_env}/ipk"
 % endif
 % endfor
 
