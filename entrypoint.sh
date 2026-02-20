@@ -357,7 +357,7 @@ configure_ipk_feeds() {
 
          if [ -z "$VENDOR_IPK_VERSION" ] || [ "$VENDOR_IPK_VERSION" = "None" ]; then
              vendor_path="file://${HOME}/ipks/raspberrypi4-64-rdke-vendor/${VENDOR_LAYER_VERSION}/ipk"
-             vendor_oss_path="file://${HOME}/ipks/rdk-arm64-oss-vendor/raspberrypi4-64-rdke-vendor/${VENDOR_LAYER_VERSION}/ipk"
+             vendor_oss_path="file://${HOME}/ipks/${OSS_IPK_DIR}-vendor/raspberrypi4-64-rdke-vendor/${VENDOR_LAYER_VERSION}/ipk"
          else
              vendor_path="file://${VENDOR_IPK_PATH}"
              vendor_oss_path="file://${VENDOR_OSS_IPK_PATH}"
