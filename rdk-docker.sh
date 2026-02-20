@@ -10,7 +10,7 @@ BLUE='\033[0;34m'
 NC='\033[0m'
 
 DEFAULT_TARGET="raspberrypi"
-DEFAULT_LAYER="oss"
+DEFAULT_LAYER="vendor"
 DEFAULT_BRANCH="develop"
 IMAGE_NAME="rdk-layer-builder"
 CONTAINER_NAME="${CONTAINER_NAME:-rdk-layer-builder}"

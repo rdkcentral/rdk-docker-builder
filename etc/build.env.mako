@@ -14,6 +14,8 @@
     # Branches (env-first)
     manifest_branch_env = os.environ.get('REPO_MANIFEST_BRANCH', target_branch)
 
+    enable_oss_source = os.environ.get("ENABLE_OSS_SOURCE", "true")
+
     # Manifest files: check for global override from environment variable MANIFEST_FILE, if this is set, it will take priority over defaults
     manifest_file_env = os.environ.get('MANIFEST_FILE')
 
@@ -42,6 +44,10 @@
 export TARGET="${target_env}"
 export LAYER="${layer_env}"
 export IPK_DIR="${build['ipk-dir']}"
+export OSS_IPK_DIR="${build['oss-ipk-dir']}"
+
+# If ENABLE_OSS_SOURCE isn't set, default to true.
+export ENABLE_OSS_SOURCE="${enable_oss_source}"
 
 # Mode, Branches and Manifest
 export REPO_MANIFEST_BRANCH="${manifest_branch_env}"
@@ -75,10 +81,13 @@ export ${env_prefix[layer_name]}_DIR="${build['workspace-dir']}/${REPO_MANIFEST_
 export ${env_prefix[layer_name]}_IPK_PATH="${build['ipk-dir']}/${build['machine']['arch']}-${layer_name}/${oss_ipk_env}/ipk"
 % elif layer_name == 'vendor':
 export ${env_prefix[layer_name]}_IPK_PATH="${build['ipk-dir']}/${build['machine']['model']}-${layer_name}/${vendor_ipk_env}/ipk"
+export ${env_prefix[layer_name]}_OSS_IPK_PATH="${build['ipk-dir']}/${build['oss-ipk-dir']}-${layer_name}/${build['machine']['model']}-${layer_name}/${vendor_ipk_env}/ipk"
 % elif layer_name == 'middleware':
 export ${env_prefix[layer_name]}_IPK_PATH="${build['ipk-dir']}/${build['machine']['model']}-${layer_name}/${middleware_ipk_env}/ipk"
+export ${env_prefix[layer_name]}_OSS_IPK_PATH="${build['ipk-dir']}/${build['oss-ipk-dir']}-${layer_name}/${build['machine']['model']}-${layer_name}/${middleware_ipk_env}/ipk"
 % elif layer_name == 'application':
 export ${env_prefix[layer_name]}_IPK_PATH="${build['ipk-dir']}/${build['machine']['model']}-${layer_name}/${application_ipk_env}/ipk"
+export ${env_prefix[layer_name]}_OSS_IPK_PATH="${build['ipk-dir']}/${build['oss-ipk-dir']}-${layer_name}/${build['machine']['model']}-${layer_name}/${application_ipk_env}/ipk"
 % endif
 % endfor
 
