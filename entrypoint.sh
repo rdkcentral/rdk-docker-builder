@@ -538,16 +538,16 @@ create_ipk_feed() {
         fi
     else
         # Other layers
-	print_info "==> Non-OSS layer handling"
+        print_info "==> Non-OSS layer handling"
         print_info "Source directory        : ${BUILD_IPK_DIR}/${PACKAGE_ARCH}/"
         print_info "Destination feed directory: ${ipk_path}"
         rsync -av "$BUILD_IPK_DIR/$PACKAGE_ARCH/" "$ipk_path"
 
-	if [[ "$ENABLE_OSS_SOURCE" == "true" ]]
-	then
-	    print_info "Syncing OSS IPK packages from ${BUILD_IPK_DIR}/${OSS_IPK_DIR}-${layer_name}/ to ${oss_ipk_path}"
-	    rsync -av "$BUILD_IPK_DIR/$OSS_IPK_DIR-$layer_name/" "$oss_ipk_path"
-	fi
+        if [[ "$ENABLE_OSS_SOURCE" == "true" ]]
+        then
+            print_info "Syncing OSS IPK packages from ${BUILD_IPK_DIR}/${OSS_IPK_DIR}-${layer_name}/ to ${oss_ipk_path}"
+            rsync -av "$BUILD_IPK_DIR/$OSS_IPK_DIR-$layer_name/" "$oss_ipk_path"
+        fi
     fi
 }
 
