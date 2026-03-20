@@ -3,9 +3,33 @@
 #
 # RDK Build Environment Configuration
 # Generated on ${timestamp.isoformat()}
-
 <%
     import os
+    import re
+
+    # For the OSS layer, use rdk-oss.xml for develop/feature branches and for version tags >= 4.9.0; otherwise use rdk-arm.xml.
+    OSS_VERSION_CUTOFF = (4, 9, 0)
+    ARM_MANIFEST = 'rdk-arm.xml'
+    OSS_MANIFEST = 'rdk-oss.xml'
+
+    def get_oss_manifest(manifest_branch):
+        if not manifest_branch:
+            return ARM_MANIFEST
+
+        branch = manifest_branch.lower()
+
+        # OSS branches
+        if branch == 'develop' or branch.startswith('feature'):
+            return OSS_MANIFEST
+
+        # Version check
+        match = re.search(r'(\d+)\.(\d+)\.(\d+)', branch)
+        if match:
+            major, minor, patch = map(int, match.groups())
+            if (major, minor, patch) >= OSS_VERSION_CUTOFF:
+                return OSS_MANIFEST
+
+        return ARM_MANIFEST
 
     # Target/LAYER (env-first)
     target_env = os.environ.get('TARGET', build['target'])
@@ -19,7 +43,6 @@
 
     # Per-layer default manifest filenames when MANIFEST_FILE is not provided.
     manifest_defaults = {
-        'oss': 'rdk-oss.xml',
         'vendor': 'rdke-raspberrypi.xml',
         'middleware': 'raspberrypi4-64.xml',
         'application': 'raspberrypi4-64.xml',
@@ -27,8 +50,13 @@
     }
 
     # Use MANIFEST_FILE from env if defined. 
-    # Otherwise, use the per-layer default based on layer_env, if layer_env is unknown, fall back to 'default.xml'
-    manifest_file_get = manifest_file_env or manifest_defaults.get(layer_env, 'default.xml')
+    # Otherwise, use the per-layer default based on layer_env
+    if manifest_file_env:
+        manifest_file_get = manifest_file_env
+    elif layer_env == 'oss':
+        manifest_file_get = get_oss_manifest(manifest_branch_env)
+    else:
+        manifest_file_get = manifest_defaults.get(layer_env)
 
     # To configure IPK path
     oss_ipk_env = os.environ.get('OSS_IPK_VERSION', '')
