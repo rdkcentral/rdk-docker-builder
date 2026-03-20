@@ -17,7 +17,7 @@ build:
   
   ipk-dir: "${HOME}/ipks"
   workspace-dir: "/home/rdk/workspace"
-
+  oss-ipk-dir: "rdk-arm64-oss"
 # Repository configuration
 repository:
   base-url: "https://repo.solution57.com"
