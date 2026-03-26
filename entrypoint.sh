@@ -339,12 +339,7 @@ configure_ipk_feeds() {
     mw_inc="rdke/middleware/meta-middleware-release/conf/machine/include/middleware.inc"
     app_inc="rdke/application/meta-application-release/conf/machine/include/application.inc"
 
-    if [[ "$ENABLE_OSS_SOURCE" == "true" ]]; then
-        OSS_LAYER_VERSION=$(sed -n 's/^OSS_LAYER_VERSION *= *"\(.*\)"/\1/p' \
-            rdke/common/meta-rdk-oss-reference/conf/include/package_revisions_oss.inc)
-        export OSS_LAYER_VERSION
-        echo "OSS Version: $OSS_LAYER_VERSION"
-    else
+    if [[ "$ENABLE_OSS_SOURCE" != "true" ]]; then
         if [[ "$layer" == "vendor" || "$layer" == "middleware" || "$layer" == "application" || "$layer" == "image-assembler" ]]; then
              OSS_LAYER_VERSION=$(sed -n 's/^OSS_LAYER_VERSION *= *"\(.*\)"/\1/p' "$oss_inc")
 
@@ -356,18 +351,12 @@ configure_ipk_feeds() {
         fi
     fi
 
-    VENDOR_OSS_IPK_PATH=$(echo "$VENDOR_OSS_IPK_PATH" | sed "s/OSStobedefined/${OSS_LAYER_VERSION}/")
-    MIDDLEWARE_OSS_IPK_PATH=$(echo "$MIDDLEWARE_OSS_IPK_PATH" | sed "s/OSStobedefined/${OSS_LAYER_VERSION}/")
-    APPLICATION_OSS_IPK_PATH=$(echo "$APPLICATION_OSS_IPK_PATH" | sed "s/OSStobedefined/${OSS_LAYER_VERSION}/")
-    
-    export VENDOR_OSS_IPK_PATH MIDDLEWARE_OSS_IPK_PATH APPLICATION_OSS_IPK_PATH
-
     if [[ "$layer" == "middleware" || "$layer" == "application" || "$layer" == "image-assembler" ]]; then
          VENDOR_LAYER_VERSION=$(sed -n 's/^VENDOR_LAYER_VERSION *= *"\(.*\)"/\1/p' "$vendor_inc")
 
          if [ -z "$VENDOR_IPK_VERSION" ] || [ "$VENDOR_IPK_VERSION" = "None" ]; then
              vendor_path="file://${HOME}/ipks/raspberrypi4-64-rdke-vendor/${VENDOR_LAYER_VERSION}/ipk"
-             vendor_oss_path="file://${HOME}/ipks/${OSS_IPK_DIR}-vendor/raspberrypi4-64-rdke-vendor/${OSS_LAYER_VERSION}/${VENDOR_LAYER_VERSION}/ipk"
+             vendor_oss_path="file://${HOME}/ipks/${OSS_IPK_DIR}-vendor/raspberrypi4-64-rdke-vendor/${VENDOR_LAYER_VERSION}/ipk"
          else
              vendor_path="file://${VENDOR_IPK_PATH}"
              vendor_oss_path="file://${VENDOR_OSS_IPK_PATH}"
@@ -379,7 +368,7 @@ configure_ipk_feeds() {
 
          if [ -z "$MIDDLEWARE_IPK_VERSION" ] || [ "$MIDDLEWARE_IPK_VERSION" = "None" ]; then
              middleware_path="file://${HOME}/ipks/raspberrypi4-64-rdke-middleware/${MW_RELEASE_NUM}/ipk"
-             middleware_oss_path="file://${HOME}/ipks/${OSS_IPK_DIR}-middleware/raspberrypi4-64-rdke-middleware/${OSS_LAYER_VERSION}/${MW_RELEASE_NUM}/ipk"
+             middleware_oss_path="file://${HOME}/ipks/${OSS_IPK_DIR}-middleware/raspberrypi4-64-rdke-middleware/${MW_RELEASE_NUM}/ipk"
          else
              middleware_path="file://${MIDDLEWARE_IPK_PATH}"
              middleware_oss_path="file://${MIDDLEWARE_OSS_IPK_PATH}"
@@ -439,7 +428,7 @@ configure_ipk_feeds() {
 
               if [[ -z "$APPLICATION_IPK_VERSION" || "$APPLICATION_IPK_VERSION" == "None" ]]; then
                   application_path="file://${HOME}/ipks/raspberrypi4-64-rdke-application/${APPLICATION_LAYER_VERSION}/ipk"
-                  application_oss_path="file://${HOME}/ipks/${OSS_IPK_DIR}-application/raspberrypi4-64-rdke-application/${OSS_LAYER_VERSION}/${APPLICATION_LAYER_VERSION}/ipk"
+                  application_oss_path="file://${HOME}/ipks/${OSS_IPK_DIR}-application/raspberrypi4-64-rdke-application/${APPLICATION_LAYER_VERSION}/ipk"
               else
                   application_path="file://${APPLICATION_IPK_PATH}"
                   application_oss_path="file://${APPLICATION_OSS_IPK_PATH}"
@@ -481,7 +470,7 @@ create_ipk_feed() {
     fi
 
     local ipk_path="${IPK_DIR}/${ipk_layer}-${layer_name}/${REPO_MANIFEST_REF}/ipk"
-    local oss_ipk_path="${IPK_DIR}/${OSS_IPK_DIR}-${layer_name}/${ipk_layer}-${layer_name}/${OSS_LAYER_VERSION}/${REPO_MANIFEST_REF}/ipk"
+    local oss_ipk_path="${IPK_DIR}/${OSS_IPK_DIR}-${layer_name}/${ipk_layer}-${layer_name}/${REPO_MANIFEST_REF}/ipk"
 
     print_info "Creating $layer_name IPK feed..."
     print_info "Starting IPK feed creation"
