@@ -116,13 +116,13 @@ export ${env_prefix[layer_name]}_DIR="${build['workspace-dir']}/${REPO_MANIFEST_
 export ${env_prefix[layer_name]}_IPK_PATH="${build['ipk-dir']}/${build['machine']['arch']}-${layer_name}/${oss_ipk_env}/ipk"
 % elif layer_name == 'vendor':
 export ${env_prefix[layer_name]}_IPK_PATH="${build['ipk-dir']}/${build['machine']['model']}-${layer_name}/${vendor_ipk_env}/ipk"
-export ${env_prefix[layer_name]}_OSS_IPK_PATH="${build['ipk-dir']}/${build['oss-ipk-dir']}-${layer_name}/${build['machine']['model']}-${layer_name}/OSStobedefined/${vendor_ipk_env}/ipk"
+export ${env_prefix[layer_name]}_OSS_IPK_PATH="${build['ipk-dir']}/${build['oss-ipk-dir']}-${layer_name}/${build['machine']['model']}-${layer_name}/${vendor_ipk_env}/ipk"
 % elif layer_name == 'middleware':
 export ${env_prefix[layer_name]}_IPK_PATH="${build['ipk-dir']}/${build['machine']['model']}-${layer_name}/${middleware_ipk_env}/ipk"
-export ${env_prefix[layer_name]}_OSS_IPK_PATH="${build['ipk-dir']}/${build['oss-ipk-dir']}-${layer_name}/${build['machine']['model']}-${layer_name}/OSStobedefined/${middleware_ipk_env}/ipk"
+export ${env_prefix[layer_name]}_OSS_IPK_PATH="${build['ipk-dir']}/${build['oss-ipk-dir']}-${layer_name}/${build['machine']['model']}-${layer_name}/${middleware_ipk_env}/ipk"
 % elif layer_name == 'application':
 export ${env_prefix[layer_name]}_IPK_PATH="${build['ipk-dir']}/${build['machine']['model']}-${layer_name}/${application_ipk_env}/ipk"
-export ${env_prefix[layer_name]}_OSS_IPK_PATH="${build['ipk-dir']}/${build['oss-ipk-dir']}-${layer_name}/${build['machine']['model']}-${layer_name}/OSStobedefined/${application_ipk_env}/ipk"
+export ${env_prefix[layer_name]}_OSS_IPK_PATH="${build['ipk-dir']}/${build['oss-ipk-dir']}-${layer_name}/${build['machine']['model']}-${layer_name}/${application_ipk_env}/ipk"
 % endif
 % endfor
 
