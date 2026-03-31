@@ -39,10 +39,27 @@
     manifest_branch_env = os.environ.get('REPO_MANIFEST_BRANCH', target_branch)
 
     # OSS can be consumed as either source (new consumption model) or IPK feed (existing consumption model)
-    enable_oss_source = os.environ.get("ENABLE_OSS_SOURCE", "true")
+    if layer_env == "oss":
+        enable_oss_source = "false"
+    elif manifest_branch_env.startswith("RDK7") or manifest_branch_env in ["support/rdk7-main", "2026-M1", "2026-M2", "2025-Q3", "2025-Q4"]:
+        enable_oss_source = "false"
+    else:
+        enable_oss_source = os.environ.get("ENABLE_OSS_SOURCE", "true")
 
     # ENABLE_APPLICATION_LAYER to manage application layer dependencies from IA builds.
-    enable_application_layer = os.environ.get("ENABLE_APPLICATION_LAYER", "false")
+    if layer_env == "image-assembler":
+        if (
+            manifest_branch_env.startswith("RDK7") or
+            manifest_branch_env in ["support/rdk7-main", "2026-M1", "2026-M2", "2025-Q3", "2025-Q4"] or
+            re.search(r'(\d+)\.(\d+)\.(\d+)', manifest_branch_env) and
+            tuple(map(int, re.search(r'(\d+)\.(\d+)\.(\d+)', manifest_branch_env).groups())) <= (4, 1, 1)
+        ):
+            enable_application_layer = "true"
+        else:
+            enable_application_layer = os.environ.get("ENABLE_APPLICATION_LAYER", "false")
+    else:
+        # For non-image-assembler layers, application layer dependencies are not managed
+        enable_application_layer = "false"
 
     # Manifest files: check for global override from environment variable MANIFEST_FILE, if this is set, it will take priority over defaults
     manifest_file_env = os.environ.get('MANIFEST_FILE')
