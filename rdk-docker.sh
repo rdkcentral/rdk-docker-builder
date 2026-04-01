@@ -93,6 +93,7 @@ create_image() {
         --build-arg USER_ID="$user_id" \
         --build-arg GROUP_ID="$group_id" \
         --build-arg USERNAME="rdk" \
+        --platform linux/amd64 \
         -t "$IMAGE_NAME" .
     
     print_success "RDK Docker image built: $IMAGE_NAME"
@@ -241,6 +242,7 @@ docker_run_command() {
         -e REPO_MANIFEST_BRANCH="${REPO_MANIFEST_BRANCH:-}" \
         -e MANIFEST_FILE="${MANIFEST_FILE:-}" \
         -e LAYER="${LAYER:-}" \
+        --platform linux/amd64 \
         "$IMAGE_NAME" "$command"
 }
 
