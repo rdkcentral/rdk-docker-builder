@@ -218,6 +218,27 @@ init_or_sync_layer() {
     fi
 }
 
+################################################################################
+# Function: include_bolt_package
+#
+# Purpose:
+#   - Copy generated Bolt (*.bolt) packages into the Image Assembler
+#     downloads directory so they can be consumed during IA build.
+#
+# Prerequisites:
+#   - IPK_DIR and BOLT_PACKAGE_PATH must point to Bolt package location
+#   - layer_dir must be set to the Image Assembler layer directory
+################################################################################
+include_bolt_package() {
+
+    # Ensure downloads directory exists under the layer
+    mkdir -p "${layer_dir}/downloads/"
+
+    # Copy Bolt packages into downloads directory
+    cp -f "${IPK_DIR}/${BOLT_PACKAGE_PATH}"/com.rdkcentral*bolt \
+          "${layer_dir}/downloads/"
+
+}
 
 build_layer() {
     local layer_name="$1"
@@ -257,6 +278,29 @@ IMAGE_CLASSES:remove = "custom-rootfs-creation"
 ROOTFS_POSTPROCESS_COMMAND:remove = "pull_license_frm_artifactory"
 USER_CLASSES:remove = "create_fw_version_file"
 EOF
+    fi
+
+################################################################################
+# Conditional inclusion of Bolt packages for Image Assembler build
+#
+# Conditions:
+#   - LAYER must be set to "image-assembler"
+#   - INCLUDE_BOLT_PACKAGE must be set to "true"
+#
+# Actions:
+#   - Append Bolt-related configuration to local.conf
+#   - Copy Bolt packages into the IA downloads directory
+################################################################################
+    echo "DEBUG: INCLUDE_BOLT_PACKAGE=$INCLUDE_BOLT_PACKAGE"
+    if [ "$LAYER" = "image-assembler" ] && [ "$INCLUDE_BOLT_PACKAGE" = "true" ]; then
+        cat >> conf/local.conf <<EOF
+# Adding the Factory Apps JSON file path and DAC AppStore URL to local.conf
+FACTORY_APPS_JSON_FILE = "${JSON_FILE_PATH}"
+DAC_APPSTORE_URL = "${DAC_APPSTORE_URL_USER_INPUT}"
+EOF
+
+    print_info "calling include_bolt_package"
+    include_bolt_package
     fi
 
     print_info "Building $layer_name packages..."

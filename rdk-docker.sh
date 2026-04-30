@@ -71,11 +71,13 @@ Options:
     -l, --layer LAYER                  Specify the layer to build (oss/vendor/middleware/application/image-assembler)
     -b, --branch BRANCH                Specify the manifest branch (default: develop)
     -r, --layer-repos REPOS            Specify repository types per layer (e.g., "oss:remote,vendor:local,...")
+    --include-bolt-package             To include bolt packages in IA build.
 
 Examples:
     $0 create_image
     $0 setup                           # Interactive mode
     $0 setup -l oss -b develop         # Build OSS layer with develop branch
+    $0 setup --include-bolt-package --bolt-branch develop # Include bolt packages in IA build with develop json file.
     $0 -l application -r "oss:remote,vendor:remote,middleware:local,application:local" setup
     $0 run                             # Run build process
     $0 run dependency                  # Generate dependency graph
@@ -288,11 +290,17 @@ while [[ $# -gt 0 ]]; do
             LAYER_REPOS="$2"
             shift 2
             ;;
+        --include-bolt-package)
+            INCLUDE_BOLT_PACKAGE=true
+            shift
+	    ;;
         *)
             break
             ;;
     esac
 done
+
+export INCLUDE_BOLT_PACKAGE
 
 # If no command was provided, show usage
 if [ -z "$COMMAND" ]; then
