@@ -120,8 +120,9 @@ export MANIFEST_FILE="${manifest_file_get}"
 
 # Variable REPO_MANIFEST_BRANCH cannot contain '/'
 # '/' breaks builds, so replace it with '-'
+# Remove refs/tags/ from REPO_MANIFEST_BRANCH since it is relevant only to git
 <%
-REPO_MANIFEST_REF = manifest_branch_env.replace('/', '-')
+REPO_MANIFEST_REF = manifest_branch_env.replace('refs/tags/', '').replace('/', '-')
 %>
 export REPO_MANIFEST_REF="${REPO_MANIFEST_REF}"
 
