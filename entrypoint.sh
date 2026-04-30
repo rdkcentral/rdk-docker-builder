@@ -227,18 +227,18 @@ init_or_sync_layer() {
 #   - Copy generated Bolt artifacts and manifest file
 #
 # Prerequisites:
-#   - BUILD_BOLT must be set to "true"
-#   - BOLT_REPO, BOLT_BRANCH, BOLT_DIR must be defined
+#   - GEN_BOLT_PACKAGES must be set to "true"
+#   - BOLT_REPO, BOLT_PKG_SCRIPT_BRANCH, BOLT_DIR must be defined
 ################################################################################
 build_bolt_package() {
     # Build bolt-package
-    if [ "$BUILD_BOLT" = "true" ]; then
+    if [ "$GEN_BOLT_PACKAGES" = "true" ]; then
         echo "Bolt build enabled"
         echo "Repo   : $BOLT_REPO"
-        echo "Branch : $BOLT_BRANCH"
+        echo "Branch : $BOLT_PKG_SCRIPT_BRANCH"
     else
         echo "ERROR: Bolt build needs to be enabled."
-        echo "Please set BOLT_BUILD=true to run Bolt build."
+        echo "Please set GEN_BOLT_PACKAGES=true to run Bolt build."
         exit 1
     fi
 
@@ -268,8 +268,8 @@ build_bolt_package() {
     cd "$BOLT_DIR" || exit 1
 
     git fetch --all --tags || exit 1
-    git checkout "$BOLT_BRANCH" || {
-        echo "ERROR: Branch '$BOLT_BRANCH' not found"
+    git checkout "$BOLT_PKG_SCRIPT_BRANCH" || {
+        echo "ERROR: Branch '$BOLT_PKG_SCRIPT_BRANCH' not found"
         exit 1
     }
 
@@ -278,55 +278,110 @@ build_bolt_package() {
         chmod +x gen-bolt-pkgs.sh || exit 1
     fi
 
-    # Run Bolt package build
-    echo "Running gen-bolt-pkgs.sh..."
-    ./gen-bolt-pkgs.sh || {
-        echo "ERROR: Bolt build/sign failed"
+    # Download ralfpack binary
+    RALFPACK_BIN="$RALFPACK_BIN_DIR/ralfpack"
+
+    echo "Checking ralfpack binary..."
+
+    # Create bin directory if it does not exist
+    if [ ! -d "${HOME}/workspace/$RALFPACK_BIN_DIR" ]; then
+        echo "Creating directory: ${HOME}/workspace/$RALFPACK_BIN_DIR"
+        mkdir -p "${HOME}/workspace/$RALFPACK_BIN_DIR" || exit 1
+    fi
+
+    # Download only if binary is not present
+    if [ ! -f "${HOME}/workspace/$RALFPACK_BIN" ]; then
+        echo "Downloading ralfpack binary..."
+        wget -q -O "${HOME}/workspace/$RALFPACK_BIN" "$RALFPACK_URL" || {
+            echo "ERROR: Failed to download ralfpack binary"
+            exit 1
+        }
+        chmod +x "${HOME}/workspace/$RALFPACK_BIN" || exit 1
+    else
+        echo "ralfpack binary already exists, skipping download"
+    fi
+
+    echo "ralfpack binary available at ${HOME}/workspace/$RALFPACK_BIN"
+
+    # Download Bolt engineering certs
+    if [ ! -d "${HOME}/workspace/$BOLT_ENGG_CERTS_DIR" ]; then
+        echo "Creating directory: ${HOME}/workspace/$BOLT_ENGG_CERTS_DIR"
+        mkdir -p "${HOME}/workspace/$BOLT_ENGG_CERTS_DIR" || exit 1
+    fi
+
+    # Clone
+    [ ! -d "bolt-engineering-certificates" ] && git clone "$BOLT_ENGG_CERTS_REPO"
+
+    cd bolt-engineering-certificates || exit 1
+
+    git fetch --all --tags || exit 1
+    git checkout "$BOLT_ENGG_CERTS_BRANCH" || {
+        echo "ERROR: Branch '$BOLT_ENGG_CERTS_BRANCH' not found"
         exit 1
+    }
+
+    # Copy certs
+    cp certs/* "${HOME}/workspace/$BOLT_ENGG_CERTS_DIR/"
+
+    cd "${HOME}/workspace/$BOLT_ENGG_CERTS_DIR" || exit 1
+    # Rename private key
+    if [ -f "com.rdkcentral.ralf-private.key" ]; then
+        mv com.rdkcentral.ralf-private.key private.key
+    else
+        echo "ERROR: private key file not found"
+        exit 1
+    fi
+
+    # Rename public cert
+    if [ -f "com.rdkcentral.ralf-public.crt" ]; then
+        mv com.rdkcentral.ralf-public.crt signing-cert.pem
+    else
+        echo "ERROR: public cert file not found"
+        exit 1
+    fi
+
+    # Run Bolt package build
+    cd "${HOME}/workspace/$BOLT_DIR" || exit 1
+
+    echo "Running gen-bolt-pkgs.sh..."
+    ./gen-bolt-pkgs.sh \
+        --ralfpack-bin "$RALFPACK_BIN_VERIFY_DIR" \
+        --bolt-dl-dir "$BOLT_DL_DIR" \
+        --bolt-sstate-dir "$BOLT_SSTATE_DIR" || {
+          echo "ERROR: Bolt build/sign failed"
+          exit 1
     }
 
     echo "Bolt build completed successfully"
 
-    # Copy bolt packages
-    cd "$HOME"
+}
 
-    # Ensure Bolt package dir
-    if [ ! -d "${IPK_DIR}/${BOLT_PACKAGE_PATH}" ]; then
-        echo "Creating directory: ${IPK_DIR}/${BOLT_PACKAGE_PATH}/"
-        mkdir -p "${IPK_DIR}/${BOLT_PACKAGE_PATH}/" || {
-            echo "ERROR: Failed to create ${IPK_DIR}/${BOLT_PACKAGE_PATH}/"
-            exit 1
-        }
-    else
-        echo "Using existing directory: ${IPK_DIR}/${BOLT_PACKAGE_PATH}/"
-    fi
+include_bolt_package_from_url() {
+    DOWNLOAD_DIR="${HOME}/workspace/${REPO_MANIFEST_REF}/${LAYER}-layer/downloads"
+    JSON_LOCAL_PATH="${DOWNLOAD_DIR}/factory_app_version.json"
 
-    # Ensure Bolt manifest dir
-    if [ ! -d "${IPK_DIR}/${BOLT_MANIFEST_FILE_PATH}/${BOLT_BRANCH}/" ]; then
-        echo "Creating directory: ${IPK_DIR}/${BOLT_MANIFEST_FILE_PATH}/${BOLT_BRANCH}/"
-        mkdir -p "${IPK_DIR}/${BOLT_MANIFEST_FILE_PATH}/${BOLT_BRANCH}/" || {
-            echo "ERROR: Failed to create ${IPK_DIR}/${BOLT_MANIFEST_FILE_PATH}/${BOLT_BRANCH}/"
-            exit 1
-        }
-    else
-        echo "Using existing directory: ${IPK_DIR}/${BOLT_MANIFEST_FILE_PATH}/${BOLT_BRANCH}/"
-    fi
-
-    # Copy bolt packages
-    echo "Copying Bolt packages from ${HOME}/workspace/${BOLT_DIR}/bolts/ to ${IPK_DIR}/${BOLT_PACKAGE_PATH}"
-    rsync -av "${HOME}/workspace/${BOLT_DIR}/bolts"/com.rdkcentral*bolt "${IPK_DIR}/${BOLT_PACKAGE_PATH}/" || {
-        echo "ERROR: Failed to copy Bolt packages"
+    # Ensure download directory exists
+    mkdir -p "$DOWNLOAD_DIR" || {
+        echo "ERROR: Failed to create directory $DOWNLOAD_DIR"
         exit 1
     }
 
-    # Copy bolt manifest file
-    echo "Copying Bolt manifest file to ${IPK_DIR}/${BOLT_MANIFEST_FILE_PATH}/${BOLT_BRANCH}/"
-    rsync -av \
-        "${HOME}/workspace/${BOLT_DIR}/bolts/factory-app-version.json" \
-        "${IPK_DIR}/${BOLT_MANIFEST_FILE_PATH}/${BOLT_BRANCH}/" || {
-        echo "ERROR: Failed to copy Bolt manifest file"
+    # Remove old file if exists
+    if [ -f "$JSON_LOCAL_PATH" ]; then
+        echo "Removing old JSON: $JSON_LOCAL_PATH"
+        rm -f "$JSON_LOCAL_PATH"
+    fi
+
+    echo "Downloading from: $BOLT_APP_CONFIG_URL"
+    wget -q -O "$JSON_LOCAL_PATH" "$BOLT_APP_CONFIG_URL" || {
+        echo "ERROR: Failed to download JSON file"
         exit 1
     }
+
+    # Export local path
+    export JSON_FILE_PATH="$JSON_LOCAL_PATH"
+
+    echo "Using RDK8 Bolt packages JSON: $JSON_FILE_PATH"
 }
 
 build_layer() {
@@ -369,6 +424,43 @@ USER_CLASSES:remove = "create_fw_version_file"
 EOF
     fi
 
+################################################################################
+# Conditional inclusion of Bolt packages for Image Assembler build
+#
+# Conditions:
+#   - LAYER must be set to "image-assembler"
+#   - INCLUDE_BOLT_PACKAGE must contain a Bolt JSON URL or local file path
+#
+# Actions:
+#   - Append Bolt-related configuration to local.conf
+################################################################################
+    if [ "$LAYER" = "image-assembler" ] && [ "$USE_BOLT_PACKAGE" = "true" ]; then
+
+        echo "DEBUG: INCLUDE_BOLT_PACKAGE=$INCLUDE_BOLT_PACKAGE"
+
+        if [[ "$INCLUDE_BOLT_PACKAGE" == http* ]]; then
+            print_info "Using remote Bolt JSON"
+            BOLT_APP_CONFIG_URL="$INCLUDE_BOLT_PACKAGE"
+            include_bolt_package_from_url
+
+        elif [ -f "$INCLUDE_BOLT_PACKAGE" ]; then
+            print_info "Using local Bolt JSON"
+            export JSON_FILE_PATH="$INCLUDE_BOLT_PACKAGE"
+
+        else
+            echo "ERROR: Invalid Bolt JSON path or URL: $INCLUDE_BOLT_PACKAGE"
+            exit 1
+        fi
+
+        sed -i '/# Adding the Factory Apps JSON file path and DAC AppStore URL to local.conf/,+2d' conf/local.conf
+
+        cat >> conf/local.conf <<EOF
+# Adding the Factory Apps JSON file path and DAC AppStore URL to local.conf
+FACTORY_APPS_JSON_FILE = "${JSON_FILE_PATH}"
+DAC_APPSTORE_URL = "${DAC_APPSTORE_URL_USER_INPUT}"
+EOF
+    fi
+
     print_info "Building $layer_name packages..."
 
     local package_build_status=0
@@ -395,6 +487,10 @@ EOF
         print_error "No image name configured for layer: $layer_name. Check get_layer_config() function."
         image_build_status=1
     else
+        # Workaround to fix rootfs issue
+        print_info "Cleaning previous build for $image_name..."
+        bitbake -f -c cleanall "$image_name"
+
         print_info "Building $layer_name image..."
         bitbake "$image_name"
         image_build_status=$?
@@ -579,6 +675,12 @@ create_ipk_feed() {
       ipk_layer="${NON_OSS_IPK_LAYER}"
     fi
 
+    # Remove refs/tags/ from REPO_MANIFEST_BRANCH since it is relevant only to git
+    # Variable REPO_MANIFEST_BRANCH cannot contain '/'
+    # '/' breaks builds, so replace it with '-'
+    export REPO_MANIFEST_REF=$(echo $REPO_MANIFEST_BRANCH | sed -e "s/refs\/tags\///g")
+    export REPO_MANIFEST_REF=$(echo $REPO_MANIFEST_REF | sed -e "s/\//-/g")
+    
     local ipk_path="${IPK_DIR}/${ipk_layer}-${layer_name}/${REPO_MANIFEST_REF}/ipk"
     local oss_ipk_path="${IPK_DIR}/${OSS_IPK_DIR}-${layer_name}/${ipk_layer}-${layer_name}/${REPO_MANIFEST_REF}/ipk"
 

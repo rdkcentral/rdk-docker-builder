@@ -72,15 +72,19 @@ Options:
     -l, --layer LAYER                  Specify the layer to build (oss/vendor/middleware/application/image-assembler)
     -b, --branch BRANCH                Specify the manifest branch (default: develop)
     -r, --layer-repos REPOS            Specify repository types per layer (e.g., "oss:remote,vendor:local,...")
-    --build-bolt                       Enable Bolt package build
-    --bolt-repo <repo-url>             Specify Bolt repository URL
-    --bolt-branch <branch>             Specify Bolt branch (default: develop)
+    --genBoltPackages                  Enable Bolt package build
+    --bolt-pkg-script-branch           Specify Bolt branch (default: develop)
+    --include-bolt-package             To include bolt packages in IA build.
+
 Examples:
     $0 create_image
     $0 setup                           # Interactive mode
     $0 setup -l oss -b develop         # Build OSS layer with develop branch
-    $0 setup --build-bolt --bolt-branch develop # Build bolt package with develop branch
+    $0 setup --genBoltPackages --bolt-pkg-script-branch develop # Build bolt package with develop branch
     $0 -l application -r "oss:remote,vendor:remote,middleware:local,application:local" setup
+    $0 setup -l image-assembler -b develop --include-bolt-package # To include bolt packages in IA build.
+    $0 setup -l image-assembler -b develop --include-bolt-package --boltappconfig </home/rdk/workspace/factory-app-version.json>  # Uses a local JSON file and the file path must be accessible inside the Docker container.
+    $0 setup -l image-assembler -b develop --include-bolt-package --boltappconfig <https://abc.json> # Uses a user-provided remote JSON URL. The JSON file is downloaded and used during the IA build.
     $0 run                             # Run build process
     $0 run dependency                  # Generate dependency graph
     $0 run bolt-package                # Build/sign Bolt package only
@@ -148,6 +152,22 @@ setup() {
         export PATH="$PATH:$HOME/.local/bin"
     fi
 
+   if [ "$GEN_BOLT_PACKAGES" = "true" ]; then
+
+        print_info "Generating build.env for Bolt package build..."
+
+        LAYER="${LAYER:-image-assembler}"
+        REPO_MANIFEST_BRANCH="${REPO_MANIFEST_BRANCH:-develop}"
+
+        eval "./generate-rdk-build-env --layer $LAYER --branch \"$REPO_MANIFEST_BRANCH\" > build.env" || {
+            print_error "Failed to generate build.env for Bolt packages"
+            exit 1
+        }
+
+        print_success "Setup completed for building Bolt script packages"
+        return
+    fi
+
     # Get layer if not provided via CLI
     if [ -z "$LAYER" ]; then
         get_input "Enter layer to build (oss/vendor/middleware/application/image-assembler)" "$DEFAULT_LAYER" "LAYER"
@@ -195,6 +215,7 @@ setup() {
     eval "./generate-rdk-build-env --layer $LAYER --branch "$REPO_MANIFEST_BRANCH" $layer_repos_arg > build.env"
 
     print_success "Setup completed for $LAYER layer"
+ 
 }
 
 
@@ -277,6 +298,7 @@ cleanup() {
 
 trap cleanup SIGINT SIGTERM
 
+USE_BOLT_PACKAGE=false
 # Parse command line options
 while [[ $# -gt 0 ]]; do
     case $1 in
@@ -296,27 +318,36 @@ while [[ $# -gt 0 ]]; do
             LAYER_REPOS="$2"
             shift 2
             ;;
-        --build-bolt)
-            BUILD_BOLT=true
+        --genBoltPackages)
+            GEN_BOLT_PACKAGES=true
             shift
             ;;
-        --bolt-branch)
-            BOLT_BRANCH="$2"
+        --bolt-pkg-script-branch)
+            BOLT_PKG_SCRIPT_BRANCH="$2"
             shift 2
             ;;
-        --bolt-repo)
-            BOLT_REPO="$2"
-            shift 2
-            ;;
+        --include-bolt-package)
+
+            USE_BOLT_PACKAGE=true
+
+            if [ "$2" = "--boltappconfig" ] && [ -n "$3" ]; then
+                INCLUDE_BOLT_PACKAGE="$3"
+                shift 3
+            else
+                unset INCLUDE_BOLT_PACKAGE
+                shift 1
+            fi
+	    ;;
         *)
             break
             ;;
     esac
 done
 
-export BUILD_BOLT
-export BOLT_BRANCH
-export BOLT_REPO
+export GEN_BOLT_PACKAGES
+export BOLT_PKG_SCRIPT_BRANCH
+export USE_BOLT_PACKAGE
+export INCLUDE_BOLT_PACKAGE
 
 # If no command was provided, show usage
 if [ -z "$COMMAND" ]; then

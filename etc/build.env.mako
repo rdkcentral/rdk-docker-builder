@@ -41,7 +41,7 @@
     # OSS can be consumed as either source (new consumption model) or IPK feed (existing consumption model)
     if layer_env == "oss":
         enable_oss_source = "false"
-    elif manifest_branch_env.startswith("RDK7") or manifest_branch_env in ["support/rdk7-main", "2026-M1", "2026-M2", "2025-Q3", "2025-Q4"]:
+    elif manifest_branch_env.startswith(("RDK7", "refs/tags/RDK7")) or manifest_branch_env in ["support/rdk7-main", "2026-M1", "2026-M2", "2025-Q3", "2025-Q4"]:
         enable_oss_source = "false"
     else:
         enable_oss_source = os.environ.get("ENABLE_OSS_SOURCE", "true")
@@ -49,9 +49,10 @@
     # ENABLE_APPLICATION_LAYER to manage application layer dependencies from IA builds.
     if layer_env == "image-assembler":
         if (
-            manifest_branch_env.startswith("RDK7") or
+            manifest_branch_env.startswith(("RDK7", "refs/tags/RDK7")) or
             manifest_branch_env in ["support/rdk7-main", "2026-M1", "2026-M2", "2025-Q3", "2025-Q4"] or
             re.search(r'(\d+)\.(\d+)\.(\d+)', manifest_branch_env) and
+            not manifest_branch_env.startswith(("RDK8", "refs/tags/RDK8")) and
             tuple(map(int, re.search(r'(\d+)\.(\d+)\.(\d+)', manifest_branch_env).groups())) <= (4, 1, 1)
         ):
             enable_application_layer = "true"
@@ -88,12 +89,17 @@
     application_ipk_env = os.environ.get('APPLICATION_IPK_VERSION', '')
 
     # To Configure bolt-package build
-    build_bolt  = os.environ.get('BUILD_BOLT', 'false')
+    genBoltPackages  = os.environ.get('GEN_BOLT_PACKAGES', 'false')
     bolt_repo   = os.environ.get('BOLT_REPO', 'https://github.com/rdkcentral/bolt-pkg-build-scripts.git')
-    bolt_branch = os.environ.get('BOLT_BRANCH', 'develop')
+    bolt_pkg_script_branch = os.environ.get('BOLT_PKG_SCRIPT_BRANCH', 'develop')
     bolt_dir    = os.environ.get('BOLT_DIR', 'bolt-pkg-build-scripts')
-    bolt_package_path = os.environ.get('BOLT_PACKAGE_PATH', 'bolt-packages')
-    bolt_manifest_file_path = os.environ.get('BOLT_MANIFEST_FILE_PATH', 'bolt-manifest-file')
+    bolt_engg_certs_repo = os.environ.get('BOLT_ENGG_CERTS_REPO', 'https://github.com/rdkcentral/bolt-engineering-certificates.git')
+    bolt_engg_certs_branch = os.environ.get('BOLT_ENGG_CERTS_BRANCH', 'develop')
+
+    # To include bolt packages
+    include_bolt_package = os.environ.get('INCLUDE_BOLT_PACKAGE', 'https://osspackages.code.rdkcentral.com/apps/bolt/1.0.3/factory_app_version.json')
+    dac_appstore_url_user_input = os.environ.get('DAC_APPSTORE_URL_USER_INPUT', '')
+    use_bolt_package = os.environ.get('USE_BOLT_PACKAGE', 'false')
 %>
 
 # Target configuration
@@ -120,12 +126,25 @@ REPO_MANIFEST_REF = manifest_branch_env.replace('/', '-')
 export REPO_MANIFEST_REF="${REPO_MANIFEST_REF}"
 
 # Bolt package build configuration
-export BUILD_BOLT="${build_bolt}"
+export GEN_BOLT_PACKAGES="${genBoltPackages}"
 export BOLT_REPO="${bolt_repo}"
-export BOLT_BRANCH="${bolt_branch}"
+export BOLT_PKG_SCRIPT_BRANCH="${bolt_pkg_script_branch}"
 export BOLT_DIR="${bolt_dir}"
-export BOLT_PACKAGE_PATH="${bolt_package_path}"
-export BOLT_MANIFEST_FILE_PATH="${bolt_manifest_file_path}"
+export RALFPACK_URL="https://github.com/rdkcentral/ralfpack/releases/download/v0.5.0/ralfpack-linux-amd64"
+export RALFPACK_BIN_DIR="${bolt_dir}/bin"
+export BOLT_ENGG_CERTS_REPO="${bolt_engg_certs_repo}"
+export BOLT_ENGG_CERTS_BRANCH="${bolt_engg_certs_branch}"
+export BOLT_ENGG_CERTS_DIR="${bolt_dir}/keys"
+
+# To include bolt package configuration
+export INCLUDE_BOLT_PACKAGE="${include_bolt_package}"
+export DAC_APPSTORE_URL_USER_INPUT="${dac_appstore_url_user_input}"
+export USE_BOLT_PACKAGE="${use_bolt_package}"
+
+# Bolt scripts packages path changes
+export RALFPACK_BIN_VERIFY_DIR="${build['workspace-dir']}/${bolt_dir}/bin/ralfpack"
+export BOLT_DL_DIR="${build['workspace-dir']}/${bolt_dir}/downloads"
+export BOLT_SSTATE_DIR="${build['workspace-dir']}/${bolt_dir}/sstate-cache"
 
 # IPK Path
 export OSS_IPK_VERSION="${oss_ipk_env}"
@@ -203,6 +222,7 @@ export ${env_prefix[layer_name]}_MANIFEST_URL="${url.scheme}://${url.netloc}${pa
 export ${env_prefix[layer_name]}_MANIFEST_FILE="${path.name}"
 % endfor
 
+% if os.environ.get('GEN_BOLT_PACKAGES', 'false') != 'true':
 echo "RDK build environment loaded for $TARGET/$LAYER"
 echo "Work directory: $WORK_DIR"
 echo "Build directory: $BUILDDIR"
@@ -215,3 +235,4 @@ echo "Repository configuration:"
 echo "  ${layer_name}: $(eval echo \$${env_prefix[layer_name]}_REPO_TYPE)"
 % endif
 % endfor
+% endif
