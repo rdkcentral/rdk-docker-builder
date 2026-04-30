@@ -218,6 +218,116 @@ init_or_sync_layer() {
     fi
 }
 
+################################################################################
+# Function: build_bolt_package
+#
+# Purpose:
+#   - Clone or reuse the Bolt repository
+#   - Build Bolt packages using gen-bolt-pkgs.sh
+#   - Copy generated Bolt artifacts and manifest file
+#
+# Prerequisites:
+#   - BUILD_BOLT must be set to "true"
+#   - BOLT_REPO, BOLT_BRANCH, BOLT_DIR must be defined
+################################################################################
+build_bolt_package() {
+    # Build bolt-package
+    if [ "$BUILD_BOLT" = "true" ]; then
+        echo "Bolt build enabled"
+        echo "Repo   : $BOLT_REPO"
+        echo "Branch : $BOLT_BRANCH"
+    else
+        echo "ERROR: Bolt build needs to be enabled."
+        echo "Please set BOLT_BUILD=true to run Bolt build."
+        exit 1
+    fi
+
+    # Validate BOLT_DIR
+    if [ -z "$BOLT_DIR" ]; then
+        echo "ERROR: BOLT_DIR is not set"
+        exit 1
+    fi
+
+    if [ ! -d "$BOLT_DIR" ]; then
+        echo "Creating Bolt directory: $BOLT_DIR"
+        mkdir -p "$BOLT_DIR" || exit 1
+    fi
+
+    #  Clone Bolt repository if directory is empty, otherwise reuse it
+    if [ -z "$(ls -A "$BOLT_DIR" 2>/dev/null)" ]; then
+        echo "Cloning Bolt repository..."
+        git clone "$BOLT_REPO" "$BOLT_DIR" || {
+            echo "ERROR: Failed to clone Bolt repository"
+            exit 1
+        }
+    else
+        echo "Using existing Bolt repository at $BOLT_DIR"
+    fi
+
+    # Checkout required Bolt branch
+    cd "$BOLT_DIR" || exit 1
+
+    git fetch --all --tags || exit 1
+    git checkout "$BOLT_BRANCH" || {
+        echo "ERROR: Branch '$BOLT_BRANCH' not found"
+        exit 1
+    }
+
+    if [ ! -x "gen-bolt-pkgs.sh" ]; then
+        echo "Setting execute permission on gen-bolt-pkgs.sh"
+        chmod +x gen-bolt-pkgs.sh || exit 1
+    fi
+
+    # Run Bolt package build
+    echo "Running gen-bolt-pkgs.sh..."
+    ./gen-bolt-pkgs.sh || {
+        echo "ERROR: Bolt build/sign failed"
+        exit 1
+    }
+
+    echo "Bolt build completed successfully"
+
+    # Copy bolt packages
+    cd "$HOME"
+
+    # Ensure Bolt package dir
+    if [ ! -d "${IPK_DIR}/${BOLT_PACKAGE_PATH}" ]; then
+        echo "Creating directory: ${IPK_DIR}/${BOLT_PACKAGE_PATH}/"
+        mkdir -p "${IPK_DIR}/${BOLT_PACKAGE_PATH}/" || {
+            echo "ERROR: Failed to create ${IPK_DIR}/${BOLT_PACKAGE_PATH}/"
+            exit 1
+        }
+    else
+        echo "Using existing directory: ${IPK_DIR}/${BOLT_PACKAGE_PATH}/"
+    fi
+
+    # Ensure Bolt manifest dir
+    if [ ! -d "${IPK_DIR}/${BOLT_MANIFEST_FILE_PATH}/${BOLT_BRANCH}/" ]; then
+        echo "Creating directory: ${IPK_DIR}/${BOLT_MANIFEST_FILE_PATH}/${BOLT_BRANCH}/"
+        mkdir -p "${IPK_DIR}/${BOLT_MANIFEST_FILE_PATH}/${BOLT_BRANCH}/" || {
+            echo "ERROR: Failed to create ${IPK_DIR}/${BOLT_MANIFEST_FILE_PATH}/${BOLT_BRANCH}/"
+            exit 1
+        }
+    else
+        echo "Using existing directory: ${IPK_DIR}/${BOLT_MANIFEST_FILE_PATH}/${BOLT_BRANCH}/"
+    fi
+
+    # Copy bolt packages
+    echo "Copying Bolt packages from ${HOME}/workspace/${BOLT_DIR}/bolts/ to ${IPK_DIR}/${BOLT_PACKAGE_PATH}"
+    rsync -av "${HOME}/workspace/${BOLT_DIR}/bolts"/com.rdkcentral*bolt "${IPK_DIR}/${BOLT_PACKAGE_PATH}/" || {
+        echo "ERROR: Failed to copy Bolt packages"
+        exit 1
+    }
+
+    # Copy bolt manifest file
+    echo "Copying Bolt manifest file to ${IPK_DIR}/${BOLT_MANIFEST_FILE_PATH}/${BOLT_BRANCH}/"
+    rsync -av \
+        "${HOME}/workspace/${BOLT_DIR}/bolts/factory-app-version.json" \
+        "${IPK_DIR}/${BOLT_MANIFEST_FILE_PATH}/${BOLT_BRANCH}/" || {
+        echo "ERROR: Failed to copy Bolt manifest file"
+        exit 1
+    }
+}
 
 build_layer() {
     local layer_name="$1"
@@ -592,6 +702,19 @@ generate_dependency_graph() {
     print_success "Dependency graph generation completed for layer: $layer_name"
 }
 
+run_bolt_package() {
+    [ ! -f /home/rdk/workspace/build.env ] && {
+        print_error "No build.env found. Please run setup first"
+        exit 1
+    }
+
+    print_info "Sourcing build environment..."
+    source /home/rdk/workspace/build.env
+
+    print_info "Running Bolt package build only"
+    build_bolt_package
+}
+
 run_dependency() {
     [ ! -f /home/rdk/workspace/build.env ] && {
         print_error "No build.env found. Please run setup first"
@@ -666,6 +789,7 @@ main() {
         print_info "Running in unsupervised mode"
         case "$1" in
             "build") run_build ;;
+            "bolt-package") run_bolt_package ;;
             "dependency") run_dependency ;;
             "sync") run_sync ;;
             "shell") exec /bin/bash ;;

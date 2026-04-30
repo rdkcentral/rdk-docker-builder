@@ -87,6 +87,13 @@
     middleware_ipk_env = os.environ.get('MIDDLEWARE_IPK_VERSION', '')
     application_ipk_env = os.environ.get('APPLICATION_IPK_VERSION', '')
 
+    # To Configure bolt-package build
+    build_bolt  = os.environ.get('BUILD_BOLT', 'false')
+    bolt_repo   = os.environ.get('BOLT_REPO', 'https://github.com/rdkcentral/bolt-pkg-build-scripts.git')
+    bolt_branch = os.environ.get('BOLT_BRANCH', 'develop')
+    bolt_dir    = os.environ.get('BOLT_DIR', 'bolt-pkg-build-scripts')
+    bolt_package_path = os.environ.get('BOLT_PACKAGE_PATH', 'bolt-packages')
+    bolt_manifest_file_path = os.environ.get('BOLT_MANIFEST_FILE_PATH', 'bolt-manifest-file')
 %>
 
 # Target configuration
@@ -111,6 +118,14 @@ export MANIFEST_FILE="${manifest_file_get}"
 REPO_MANIFEST_REF = manifest_branch_env.replace('/', '-')
 %>
 export REPO_MANIFEST_REF="${REPO_MANIFEST_REF}"
+
+# Bolt package build configuration
+export BUILD_BOLT="${build_bolt}"
+export BOLT_REPO="${bolt_repo}"
+export BOLT_BRANCH="${bolt_branch}"
+export BOLT_DIR="${bolt_dir}"
+export BOLT_PACKAGE_PATH="${bolt_package_path}"
+export BOLT_MANIFEST_FILE_PATH="${bolt_manifest_file_path}"
 
 # IPK Path
 export OSS_IPK_VERSION="${oss_ipk_env}"

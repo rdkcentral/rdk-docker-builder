@@ -63,6 +63,7 @@ Commands:
     setup             Runs generate-rdk-build-env to create RDK layer build config: build.env (runs outside container)
     run               Run the RDK Layer Build Process (runs inside container using build.env from setup step)
     run dependency    Generate dependency graph instead of building (inside container)
+    run bolt-package  Build/sign Bolt package only
     sync              Sync the configured layer without building (inside container)
     shell             Drop into a shell in a container instance
     help              Show this help
@@ -71,15 +72,18 @@ Options:
     -l, --layer LAYER                  Specify the layer to build (oss/vendor/middleware/application/image-assembler)
     -b, --branch BRANCH                Specify the manifest branch (default: develop)
     -r, --layer-repos REPOS            Specify repository types per layer (e.g., "oss:remote,vendor:local,...")
-
+    --build-bolt                       Enable Bolt package build
+    --bolt-repo <repo-url>             Specify Bolt repository URL
+    --bolt-branch <branch>             Specify Bolt branch (default: develop)
 Examples:
     $0 create_image
     $0 setup                           # Interactive mode
     $0 setup -l oss -b develop         # Build OSS layer with develop branch
+    $0 setup --build-bolt --bolt-branch develop # Build bolt package with develop branch
     $0 -l application -r "oss:remote,vendor:remote,middleware:local,application:local" setup
     $0 run                             # Run build process
     $0 run dependency                  # Generate dependency graph
-
+    $0 run bolt-package                # Build/sign Bolt package only
 EOF
 }
 
@@ -252,6 +256,10 @@ run_dependency() {
     docker_run_command "dependency" "Running RDK dependency graph generation (inside container)..."
 }
 
+run_bolt_package() {
+    docker_run_command "bolt-package" "Running Bolt package build (inside container)..."
+}
+
 sync() {
     docker_run_command "sync" "Running RDK layer sync (inside container)..."
 }
@@ -288,11 +296,27 @@ while [[ $# -gt 0 ]]; do
             LAYER_REPOS="$2"
             shift 2
             ;;
+        --build-bolt)
+            BUILD_BOLT=true
+            shift
+            ;;
+        --bolt-branch)
+            BOLT_BRANCH="$2"
+            shift 2
+            ;;
+        --bolt-repo)
+            BOLT_REPO="$2"
+            shift 2
+            ;;
         *)
             break
             ;;
     esac
 done
+
+export BUILD_BOLT
+export BOLT_BRANCH
+export BOLT_REPO
 
 # If no command was provided, show usage
 if [ -z "$COMMAND" ]; then
@@ -308,11 +332,17 @@ case "$COMMAND" in
         setup
         ;;
     run)
-        if [ "$1" = "dependency" ]; then
+    case "$1" in
+        dependency)
             run_dependency
-        else
+            ;;
+        bolt-package)
+            run_bolt_package
+            ;;
+        *)
             run
-        fi
+	    ;;
+        esac
         ;;
     sync)
         sync
