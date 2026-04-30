@@ -48,12 +48,13 @@
 
     # ENABLE_APPLICATION_LAYER to manage application layer dependencies from IA builds.
     if layer_env == "image-assembler":
+        clean_branch = manifest_branch_env.replace("refs/tags/", "")
+        match = re.fullmatch(r'(\d+)\.(\d+)\.(\d+)', clean_branch)
+
         if (
             manifest_branch_env.startswith(("RDK7", "refs/tags/RDK7")) or
             manifest_branch_env in ["support/rdk7-main", "2026-M1", "2026-M2", "2025-Q3", "2025-Q4"] or
-            re.search(r'(\d+)\.(\d+)\.(\d+)', manifest_branch_env) and
-            not manifest_branch_env.startswith(("RDK8", "refs/tags/RDK8")) and
-            tuple(map(int, re.search(r'(\d+)\.(\d+)\.(\d+)', manifest_branch_env).groups())) <= (4, 1, 1)
+            (not clean_branch.startswith("RDK") and match and tuple(map(int, clean_branch.split("."))) <= (4, 1, 1))
         ):
             enable_application_layer = "true"
         else:
