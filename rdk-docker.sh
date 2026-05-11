@@ -137,23 +137,62 @@ check_local_ipk_available() {
     fi
 }
 
-# function: setup()
-setup() {
-    print_info "Running RDK setup (outside container)..."
+
+python_setup() {
+    print_info "Installing python dependencies (outside container)..."
 
     # Ensure Mako is installed
     if python3 -c "import mako" 2>/dev/null; then
-       print_info "Mako is already installed."
+        print_info "Mako is already installed."
     else
         print_info "Mako not found. Installing..."
         pip3 install mako || {
             print_error "Failed to install Mako."
             exit 1
         }
-        export PATH="$PATH:$HOME/.local/bin"
     fi
 
-   if [ "$GEN_BOLT_PACKAGES" = "true" ]; then
+    # Ensure jsonschema is installed
+    if python3 -c "import jsonschema" 2>/dev/null; then
+        print_info "jsonschema  is already installed."
+    else
+        print_info "jsonschema not found. Installing..."
+        pip3 install jsonschema || {
+            print_error "Failed to install jsonschema."
+            exit 1
+        }
+    fi
+
+    # Ensure PyYaml is installed
+    if python3 -c "import pyyaml" 2>/dev/null; then
+        print_info "pyyaml  is already installed."
+    else
+        print_info "PyYaml not found. Installing..."
+        pip3 install pyyaml || {
+            print_error "Failed to install pyyaml."
+            exit 1
+        }
+    fi
+
+     export PATH="$PATH:$HOME/.local/bin"
+}
+
+# function: setup()
+setup() {
+    print_info "Running RDK setup (outside container)..."
+
+    # setup python venv
+    if [ ! -d .venv ]; then
+         # requires python3-venv
+         print_info "Creating python venv"
+         python3 -m venv .venv
+    fi
+
+    # activate python venv
+    . .venv/bin/activate
+    python_setup
+    
+    if [ "$GEN_BOLT_PACKAGES" = "true" ]; then
 
         print_info "Generating build.env for Bolt package build..."
 
@@ -214,6 +253,9 @@ setup() {
 
     # Generate build.env
     eval "./generate-rdk-build-env --layer $LAYER --branch "$REPO_MANIFEST_BRANCH" $layer_repos_arg > build.env"
+    
+    # deactivate python venv
+    deactivate
 
     print_success "Setup completed for $LAYER layer"
  
