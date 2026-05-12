@@ -145,8 +145,14 @@ For RDK8 the default signed bolt applications are as per https://osspackages.cod
 The IPK Packages Feed for the layer will be stored in `$HOME/ipks`, please refer to the diagram in the next section for IPK Feed output directory structure.
 
 ---
-## RDK Layer Build Docker Overview
-![RDK7 RDK Docker Builder Overview](assets/rdk-docker-builder.jpg)
+## RDK Docker Builder Structure
+**RDK7**
+![RDK Docker Builder Overview](assets/rdk-docker-builder.jpg)
+
+---
+
+**RDK8**
+![RDK Docker Builder Overview](assets/rdk-docker-builder-rdk8.jpg)
 
 ---
 
