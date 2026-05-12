@@ -20,8 +20,7 @@ The following should be installed on your host system
 - [Python venv](https://docs.python.org/3/library/venv.html) 
 
 ### Storage Space
-You will need sufficient storage space to perform the builds and store the IPK's generated. 
-The IPK's can be stored on a local or a remotely mounted filesystem. Estimated storage requirements per IPK Feed and Layer Builds are as follows:
+You will need sufficient storage space on the host filesystem to perform the builds and store the IPK's generated. The IPK's can be stored on a local or a remotely mounted filesystem. Estimated storage requirements per IPK Feed and Layer Builds are as follows:
 
 **RDK 7** 
 | Layer | Build Size | IPK Size|
@@ -246,7 +245,7 @@ docker exec -it <container_id_or_name> /bin/bash
 - **image-assembler**: Image Assembly Layer (Final Image)
 ---
 
-## Uaing RDK Docker Build with Bolt Applications
+## Using RDK Docker Build with Bolt Applications
 RDK8 introduces a modern, decoupled application framework that is a significant evolution from the RDK7 model. Applications in RDK8 are no longer tightly bound to the firmware image and are instead delivered as platform‑agnostic BOLT packages, enabling greater flexibility, faster iteration, and independent upgrades.
 
 For a detailed explanation of the RDK8 application architecture, packaging model, and migration differences from RDK7, refer to: [Applications on RDK8](https://wiki.rdkcentral.com/spaces/RDK/pages/480904291/Applications+on+RDK8)
