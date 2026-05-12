@@ -36,7 +36,7 @@ You will need sufficient storage space on the host filesystem to perform the bui
 | ----------- | ----------- | ----------- | ----------- |
 |VENDOR| 52GB | 200MB | 305 MB |
 |Middleware| 51GB | 214MB | 413MB|
-|Image Assembler| 27GB | NA |
+|Image Assembler| 27GB | NA | NA |
 
 *In RDK8 the OSS is built as part of vendor and middleware layers and there is no separate application layer.*
 
@@ -142,7 +142,7 @@ cd <WORKSPACE>/rdk-docker-builder/
 For RDK8 the default signed bolt applications are as per https://osspackages.code.rdkcentral.com/apps/bolt/1.0.3/factory_app_version.json 
 
 ## IPK Package Feed 
-The IPK Packages Feed for the layer will be stored in `$HOME/ipks`, please refer to the diagram in the next section for IPK Feed output directory structure.
+The IPK Packages Feed for the layer will be stored in `$HOME/ipks`, please refer to the diagrams in the next section for IPK Feed output directory structure.
 
 ---
 ## RDK Docker Builder Structure
@@ -165,7 +165,7 @@ There are two phases to the layer build process
 - *run* 
    - runs the docker which in turns automatically triggers the layer build 
    - once complete will store the IPK's as per your `~/$HOME/ipks` directory location
-   - the image can be retreived from the build output directory `<branch> or tag/<layerName>-<layer>/build-raspberrypi4-64-rdke/tmp/deploy/images/raspberrypi4-64-rdke`
+   - the image can be retreived from the build output directory `<branch or tag>/<layerName>-<layer>/build-raspberrypi4-64-rdke/tmp/deploy/images/raspberrypi4-64-rdke`
 
 
 ---
