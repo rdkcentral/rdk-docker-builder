@@ -54,7 +54,7 @@ get_input() {
 
 show_usage() {
     cat << EOF
-RDK Docker Builder (Unofficial Community Tool)
+RDK Docker Builder
 
 Usage: $0 [OPTIONS] <command>
 
@@ -70,24 +70,43 @@ Commands:
 
 Options:
     -l, --layer LAYER                  Specify the layer to build (oss/vendor/middleware/application/image-assembler)
-    -b, --branch BRANCH                Specify the manifest branch (default: develop)
-    -r, --layer-repos REPOS            Specify repository types per layer (e.g., "oss:remote,vendor:local,...")
-    --genBoltPackages                  Enable Bolt package build
-    --bolt-pkg-script-branch           Specify Bolt branch (default: develop)
-    --include-bolt-package             To include bolt packages in IA build.
+    -b, --branch BRANCH                Specify the manifest branch or tag (default: develop)
+    --include-bolt-package             To include bolt packages in IA build (only applicable for image-assembler layer)
+    --genBoltPackages                  Bolt package build and signing with engineering certs/keys
+    --bolt-pkg-script-branch           Specify branch of bolt-pkg-script repo to build factory apps from (default: develop)
 
 Examples:
-    $0 create_image
-    $0 setup                           # Interactive mode
-    $0 setup -l oss -b develop         # Build OSS layer with develop branch
-    $0 setup --genBoltPackages --bolt-pkg-script-branch develop # Build bolt package with develop branch
-    $0 -l application -r "oss:remote,vendor:remote,middleware:local,application:local" setup
-    $0 setup -l image-assembler -b develop --include-bolt-package # To include bolt packages in IA build.
-    $0 setup -l image-assembler -b develop --include-bolt-package --boltappconfig </home/rdk/workspace/factory-app-version.json>  # Uses a local JSON file and the file path must be accessible inside the Docker container.
-    $0 setup -l image-assembler -b develop --include-bolt-package --boltappconfig <https://abc.json> # Uses a user-provided remote JSON URL. The JSON file is downloaded and used during the IA build.
-    $0 run                             # Run build process
-    $0 run dependency                  # Generate dependency graph
-    $0 run bolt-package                # Build/sign Bolt package only
+    ---------------------------------------------------------
+    Create Docker Image (run once or when Dockerfile changes)
+    ---------------------------------------------------------
+    $0 create_image 
+
+    -----------
+    Layer Setup
+    -----------
+    $0 setup -l vendor -b develop                                   # Build vendor layer with develop branch
+    $0 setup -l middleware -b develop                               # Build middleware layer with develop branch
+    $0 setup -l image-assembler -b develop                          # Build image assemebler layer with develop branch (no bolt apps)
+    $0 setup -l image-assembler -b develop --include-bolt-package   # include default bolt applicationsin IA build
+    
+    ----------------------------------------------------------------------
+    Bolt Application configuration for IA layer (can be local file or URL)
+    ----------------------------------------------------------------------
+    $0 setup -l image-assembler -b <branch> --include-bolt-package --boltappconfig <path>/factory-app-version.json 
+    $0 setup -l image-assembler -b <branch> --include-bolt-package --boltappconfig https://<abc.json> 
+    
+    -----------
+    Layer Build
+    -----------
+    $0 run              # Run build process (uses build.env generated from setup step)
+    $0 run bolt-package # add bolt-package option if building IA with bolt applications (image-assembler layer only)
+
+    ----------------------------------------
+    Build and Sign Factory Bolt Applications
+    ----------------------------------------
+    $0 setup --genBoltPackages --bolt-pkg-script-branch develop   
+    $0 run bolt-package    
+
 EOF
 }
 
