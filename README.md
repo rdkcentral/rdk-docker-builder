@@ -262,24 +262,24 @@ This method uses the scripts/tools from https://github.com/rdkcentral/bolt-pkg-b
 
 - Generate Image without Bolt packages, Apps can then be sideloaded as per [Factory Applications](https://wiki.rdkcentral.com/spaces/RDK/pages/474687726/Factory+Apps+on+RDK8)
 ```bash
-./rdk-docker.sh setup -l image-assembler -b develop
+./rdk-docker.sh setup -l image-assembler -b <branch>
 ```
 
 - Generate Image with default Factory Application Bolt packages
 ```bash
-./rdk-docker.sh setup -l image-assembler -b develop --include-bolt-package
+./rdk-docker.sh setup -l image-assembler -b <branch> --include-bolt-package
 ```
 It uses the default JSON configuration: https://osspackages.code.rdkcentral.com/apps/bolt/1.0.3/factory_app_version.json
 
 - Generate Image using a local bolt configuration JSON file
 ```bash
-./rdk-docker.sh setup -l image-assembler -b develop --include-bolt-package --boltappconfig </home/rdk/workspace/factory-app-version.json>
+./rdk-docker.sh setup -l image-assembler -b <branch> --include-bolt-package --boltappconfig </home/rdk/workspace/factory-app-version.json>
 ```
 Uses a local JSON file, note the file path must be accessible inside the Docker container.
 
 - Using a custom remote JSON
 ```bash
-./rdk-docker.sh setup -l image-assembler -b develop --include-bolt-package --boltappconfig <https://abc.json>
+./rdk-docker.sh setup -l image-assembler -b <branch> --include-bolt-package --boltappconfig <https://abc.json>
 ```
 Uses a user-provided remote JSON URL. The applications and public key provided in the JSON file will be used to populate the image assember build with these packages.
 
