@@ -1,47 +1,84 @@
 # RDK Docker Builder
 
-Docker RDK Yocto development environment for building RDK-E RPI OSS, VENDOR, MIDDLEWARE, APPLICATION and IMAGE ASSEMBLER Layer Images.
+## Introduction
 
-It is assumed the user is familiar with the RDK-E Layered Architeture. If not please see the latest RDK-E release for an overview:
+RDK Docker Builder is a RDK Yocto development environment for building RDK-E RPI OSS, VENDOR, MIDDLEWARE, APPLICATION and IMAGE ASSEMBLER Layer Images. It can also be used to build the RDK8 factory firebolt applications (base bolt, wpe and reference ui).
+
+This Docker can be used to build the [RDK7](https://wiki.rdkcentral.com/spaces/RDK/pages/407524261/RDK7+Release+Notes) and [RDK8](https://wiki.rdkcentral.com/spaces/RDK/pages/476317896/RDK8+Release+Notes) releases along and any active branch or tag for the different rdk video layers.
+
+It is assumed the user is familiar with the RDK-E Layered Architeture. If not please see the latest RDK-E release notes for an overview:
 [RDK-E Code Releases](https://wiki.rdkcentral.com/spaces/CMF/pages/414065624/RDK-E+Video+Code+Releases)
 
 ---
-## Prequesites
+## Prerequisites
 
-[Docker](https://www.docker.com/get-started/) must be installed on your host system
+### Host Tools
+The following should be installed on your host system
 
-You will need enought storage space to perform the builds and store the IPK's generated. 
-The IPK's can be stored on a local or a remotely mounted filesystem
+- [Docker](https://www.docker.com/get-started/)
+- [Python 3](https://www.python.org/downloads/)
+- [Python venv](https://docs.python.org/3/library/venv.html) 
 
-Estimated OSS and RPI Layer storage requirements per IPK Feed and Layer Build:
+### Storage Space
+You will need sufficient storage space to perform the builds and store the IPK's generated. 
+The IPK's can be stored on a local or a remotely mounted filesystem. Estimated storage requirements per IPK Feed and Layer Builds are as follows:
 
-| Layer | IPK Size | Build Size |
+**RDK 7** 
+| Layer | Build Size | IPK Size|
 | ----------- | ----------- | ----------- |
-| OSS | 873 MB | 84 GB |
-| Vendor | 144 MB | 52 GB |
-| Middleware | 394 MB| 121 GB |
-| Application | 6.3 MB | 57 GB |
-| Image Assembler | NA | 28 GB |
+|OSS| 82GB | 860MB |
+|VENDOR| 44GB | 183MB|
+|Middleware| 118GB | 395MB|
+|Application| 56GB | 6.3MB|
+|Image Assembler| 27GB | NA |
 
-Systems Tested:
-This docker setup has been tested on Ubuntu 20.04 
+**RDK 8** 
+| Layer | Build Size | IPK Size| OSS IPK Size|
+| ----------- | ----------- | ----------- | ----------- |
+|VENDOR| 52GB | 200MB | 305 MB |
+|Middleware| 51GB | 214MB | 413MB|
+|Image Assembler| 27GB | NA |
+
+*In RDK8 the OSS is built as part of vendor and middleware layers and there is no separate application layer.*
+
+
+### Systems Tested
+This docker setup has been tested on:
+- Ubuntu Focal 20.04 with Python 3.8.10
+- Ubuntu Noble 24.04 with Python 3.12.3
 
 ---
 ## Quick Start
 
+### Configure IPK Storage Location
+Before creating your RDK Layer Docker Builder Image you will need to identify a location to store the IPK's created by the different RDK Layer Builds. This location needs to have enough storage space to hold the IPK's. Once identified you then need to create a softlink from your $HOME directory to this IPK location as follows:
 ```bash
 # identify an IPK storage location accessible on your filesystem and softlink it from your /home/<user> directory
 cd $HOME
-ln -s <PATH TO IPK STORAGE> ipks
-
+ln -s <PATH TO IPK STORAGE/> ipks
+```
+example:
+```bash
+cd $HOME
+ln -s /home/jenkins/jenkinsroot/workspace/ipks/ ipks
+ls -al $HOME
+lrwxrwxrwx  1 jenkins jenkins    45 Jan  7 10:37 ipks -> /home/jenkins/jenkinsroot/workspace/ipks
+```
+### Create the RDK Docker Builder Container Image
+```bash
 cd <WORKSPACE>
+
 # clone the docker repo
 git clone https://github.com/rdkcentral/rdk-docker-builder.git
+
 cd rdk-docker-builder
 
 # create the docker image
 ./rdk-docker.sh create_image
+```
 
+### Building a Layer
+```bash
 # configure the layer build environment 
 ./rdk-docker.sh setup -l <layer> -b <manifest branch or tag>
 
@@ -49,7 +86,7 @@ cd rdk-docker-builder
 ./rdk-docker.sh run
 ```
 
-The source code and build output for the layer will be stored in a `<manifest>/<layer>-layer/` directory within your git clone, e.g. for a vendor layer build:
+The source code and build output for the layer will be stored in a `<manifest>/<layerName>-layer/` directory within your git clone, e.g. for a vendor develop branch layer build:
 ```bash
 <WORKSPACE>/rdk-docker-builder/develop/vendor-layer
 
@@ -61,43 +98,59 @@ scripts                    # layer scripts directory
 sstate-cache               # build sstate cache directory
 ```
 
+
+### RDK7 Build Commands
+```bash
+cd <WORKSPACE>/rdk-docker-builder/
+
+# oss
+./rdk-docker.sh setup -l oss -b 4.6.2-community
+./rdk-docker.sh run
+
+# vendor
+./rdk-docker.sh setup -l vendor -b RDK7-1.0.0
+./rdk-docker.sh run
+
+# middleware
+./rdk-docker.sh setup -l middleware -b RDK7-1.0.0
+./rdk-docker.sh run
+
+# application
+./rdk-docker.sh setup -l application -b RDK7-1.0.0
+./rdk-docker.sh run
+
+# image-assembler
+./rdk-docker.sh setup -l image-assembler -b RDK7-1.0.0
+./rdk-docker.sh run
+```
+
+### RDK8 Build Commands
+```bash
+cd <WORKSPACE>/rdk-docker-builder/
+
+# vendor
+./rdk-docker.sh setup -l vendor -b RDK8-1.0.0
+./rdk-docker.sh run
+
+# middleware
+./rdk-docker.sh setup -l middleware -b RDK8-1.0.0
+./rdk-docker.sh run
+
+# image-assembler (and include RDK8 signed factory bolt applications)
+./rdk-docker.sh setup -l image-assembler -b RDK8-1.0.0 --include-bolt-package
+./rdk-docker.sh run
+```
+For RDK8 the default signed bolt applications are as per https://osspackages.code.rdkcentral.com/apps/bolt/1.0.3/factory_app_version.json 
+
+## IPK Package Feed 
 The IPK Packages Feed for the layer will be stored in `$HOME/ipks`, please refer to the diagram in the next section for IPK Feed output directory structure.
 
 ---
 ## RDK Layer Build Docker Overview
-![RDK Docker Builder Overview](assets/rdk-docker-builder.jpg)
+![RDK7 RDK Docker Builder Overview](assets/rdk-docker-builder.jpg)
 
 ---
-## IPK Storage Setup 
 
-Before creating your RDK Layer Docker Builder Image you will need to identify a location to store the IPK's created by the different RDK Layer Builds.
-This location needs to have enough storage space to hold the IPK's. Once identified you then need to create a softlink from your $HOME directory to this IPK location as follows:
-
-```bash
-cd $HOME
-ln -s <PATH TO IPK STORAGE> ipks
-```
-
-example:
-```bash
-ls -al $HOME
-lrwxrwxrwx  1 jenkins jenkins    45 Jan  7 10:37 ipks -> /home/jenkins/jenkinsroot/workspace/ipks
-```
-
----
-## Create the RDK Layer Docker Build Image
-```bash
-# clone the rdk layer build repo
-git clone https://github.com/rdkcentral/rdk-docker-builder.git
-
-# create the RDK Layer Build Docker Image
-./rdk-docker.sh create_image
-
-# if you wish to delete the image run
-docker rmi -f rdk-layer-builder
-```
-
----
 ## Build the RDK Layer and Generate the IPK's
 
 There are two phases to the layer build process 
@@ -107,54 +160,18 @@ There are two phases to the layer build process
 - *run* 
    - runs the docker which in turns automatically triggers the layer build 
    - once complete will store the IPK's as per your `~/$HOME/ipks` directory location
-   - the image can be retreived from the build output directory
+   - the image can be retreived from the build output directory `<branch> or tag/<layerName>-<layer>/build-raspberrypi4-64-rdke/tmp/deploy/images/raspberrypi4-64-rdke`
 
-
-```bash
-# clone the docker if it doesn't exist
-git clone https://github.com/rdkcentral/rdk-docker-builder.git
-
-cd rdk-docker-builder
-
-# setup: configure the build environment (select layer: oss/vendor/middleware/application/image-assembler)
-./rdk-docker.sh setup -l oss -b 4.9.0
-
-# run: build the layer and generate the IPK's and Layer Images
-./rdk-docker.sh run
-```
-
-NOTES
-- You must build the layers in order 
-    - OSS, VENDOR, MIDDLEWARE, APPLICATION, IMAGE ASSEMBLER
-- If you want to build a different layer you must re-run `./rdk-docker.sh setup` before running `./rdk-docker.sh run`
-- if the branch name has a `/` it will be replaced with `-` on the filesystem e.g. `feature/test-branch` will be `feature-test-branch`
-- If you wish to override the default versions of IPK used for a layer you must set them explicitly before you do the *setup* phase
-```bash
-
-# vendor
-export OSS_IPK_VERSION=4.9.0                   # OSS IPK version for packaging
-
-# middleware 
-export OSS_IPK_VERSION=4.9.0                   # OSS IPK version for packaging
-export VENDOR_IPK_VERSION=develop              # Vendor IPK version for packaging
-
-# application 
-export OSS_IPK_VERSION=4.9.0                   # OSS IPK version for packaging
-export VENDOR_IPK_VERSION=develop              # Vendor IPK version for packaging
-export MIDDLEWARE_IPK_VERSION=develop          # Middleware IPK version for packaging
-
-# image assembler
-export OSS_IPK_VERSION=4.9.0                   # OSS IPK version for packaging
-export VENDOR_IPK_VERSION=develop              # Vendor IPK version for packaging
-export MIDDLEWARE_IPK_VERSION=develop          # Middleware IPK version for packaging
-export APPLICATION_IPK_VERSION=develop         # Application IPK version for Packaging
-
-# once you set the overrides then run setup
-./rdk-docker.sh setup -l <layer> -b <layer manifest branch or tag>
-```
 
 ---
 ## Usage Notes
+
+- You must build the layers in order 
+    - RDK7: OSS, VENDOR, MIDDLEWARE, APPLICATION, IMAGE ASSEMBLER
+    - RDK8: VENDOR, MIDDLEWARE, IMAGE ASSEMBLER
+- If you want to build a different layer you must re-run `./rdk-docker.sh setup` before running `./rdk-docker.sh run`
+- if the branch name has a `/` it will be replaced with `-` on the filesystem e.g. `feature/test-branch` will be `feature-test-branch`
+- If you wish to override the default versions of IPK used for a layer you must set them explicitly before you do the *setup* phase
 
 ### Default IPK Versions
 
@@ -174,7 +191,7 @@ The default version of the layer may and most likely will be different depending
 ```
 The current release of rdk-docker-builder does not support using IPK's from a remote location (e.g. artifactory, http server)
 
-This will be supported in the next version due in 2026 Q2 timeframe.
+This will be supported in the next version due in 2026 Q3 timeframe.
 ```
 
 ### Running multiple docker builds at same time
@@ -185,7 +202,7 @@ All build output for your layer is accessible form your local filesystem, i.e. y
 The layer build output available in your clone in the following location.
 
 ```
-<WORKSPACE>/rdk-docker-builder/<manifest branch or tag>/<layer>-layer/build-raspberrypi4-64-rdke
+<WORKSPACE>/rdk-docker-builder/<manifest branch or tag>/<layerName>-layer/build-raspberrypi4-64-rdke
 ```
 
 ### How to make changes in your build environment
@@ -193,7 +210,7 @@ All source code changes in your layer can be made on your local filesystem, i.e.
 The layer source code is available in your clone in the following location.
 
 ```
-<WORKSPACE>/rdk-docker-builder/<layer>-layer/rdke
+<WORKSPACE>/rdk-docker-builder/<layerName>-layer/rdke
 ```
 
 ### How to get a shell within the docker environment
@@ -206,10 +223,65 @@ If you wish to work in the container environment in interactive mode simply run
 The docker runtime user is `rdk` and home directory is `/home/rdk`
 The external IPK location is mounted in the following location `/home/rdk/ipks` which maps to `${HOME}/ipks`
 
+### Some Useful Docker Comamnds
+```bash
+# get a list of active images
+docker images
+
+# get list of running docker containers
+docker ps
+
+# if you wish to delete the image e.g run
+docker rmi -f rdk-layer-builder
+
+# get a shell prompt on a running container
+docker exec -it <container_id_or_name> /bin/bash
+```
+
 ### Supported Layers
 - **oss**: Open Source Software Layer
 - **vendor**: Vendor Layer
 - **middleware**: Middleware Layer
 - **application**: Application Layer
 - **image-assembler**: Image Assembly Layer (Final Image)
+---
+
+## Uaing RDK Docker Build with Bolt Applications
+RDK8 introduces a modern, decoupled application framework that is a significant evolution from the RDK7 model. Applications in RDK8 are no longer tightly bound to the firmware image and are instead delivered as platform‑agnostic BOLT packages, enabling greater flexibility, faster iteration, and independent upgrades.
+
+For a detailed explanation of the RDK8 application architecture, packaging model, and migration differences from RDK7, refer to: [Applications on RDK8](https://wiki.rdkcentral.com/spaces/RDK/pages/480904291/Applications+on+RDK8)
+
+RDK Docker Builder can:
+
+- Build and Sign the Bolt [Factory Applications](https://wiki.rdkcentral.com/spaces/RDK/pages/474687726/Factory+Apps+on+RDK8) using the [engineering certs/keys](https://github.com/rdkcentral/bolt-engineering-certificates)
+```bash
+./rdk-docker.sh setup --genBoltPackages --bolt-pkg-script-branch <branch>
+./rdk-docker.sh run bolt-package
+```
+This method uses the scripts/tools from https://github.com/rdkcentral/bolt-pkg-build-scripts but automates it such that the ralfpack binary and other dependencies are part of the container image.
+
+
+- Generate Image without Bolt packages, Apps can then be sideloaded as per [Factory Applications](https://wiki.rdkcentral.com/spaces/RDK/pages/474687726/Factory+Apps+on+RDK8)
+```bash
+./rdk-docker.sh setup -l image-assembler -b develop
+```
+
+- Generate Image with default Factory Application Bolt packages
+```bash
+./rdk-docker.sh setup -l image-assembler -b develop --include-bolt-package
+```
+It uses the default JSON configuration: https://osspackages.code.rdkcentral.com/apps/bolt/1.0.3/factory_app_version.json
+
+- Generate Image using a local bolt configuration JSON file
+```bash
+./rdk-docker.sh setup -l image-assembler -b develop --include-bolt-package --boltappconfig </home/rdk/workspace/factory-app-version.json>
+```
+Uses a local JSON file, note the file path must be accessible inside the Docker container.
+
+- Using a custom remote JSON
+```bash
+./rdk-docker.sh setup -l image-assembler -b develop --include-bolt-package --boltappconfig <https://abc.json>
+```
+Uses a user-provided remote JSON URL. The applications and public key provided in the JSON file will be used to populate the image assember build with these packages.
+
 ---
