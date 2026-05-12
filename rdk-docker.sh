@@ -164,7 +164,7 @@ python_setup() {
     fi
 
     # Ensure PyYaml is installed
-    if python3 -c "import pyyaml" 2>/dev/null; then
+    if python3 -c "import yaml" 2>/dev/null; then
         print_info "pyyaml  is already installed."
     else
         print_info "PyYaml not found. Installing..."
