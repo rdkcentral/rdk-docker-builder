@@ -259,7 +259,14 @@ RDK8 introduces a modern, decoupled application framework that is a significant 
 
 For a detailed explanation of the RDK8 application architecture, packaging model, and migration differences from RDK7, refer to: [Applications on RDK8](https://wiki.rdkcentral.com/spaces/RDK/pages/480904291/Applications+on+RDK8)
 
-RDK Docker Builder can:
+# Create Image Assember with default Factory Bolt Applications
+- Generate Image with default Factory Application Bolt packages
+```bash
+./rdk-docker.sh setup -l image-assembler -b <branch> --include-bolt-package
+```
+It uses the default JSON configuration: https://osspackages.code.rdkcentral.com/apps/bolt/1.0.3/factory_app_version.json
+
+### Build and Sign the Factory Bolt Applications
 
 - Build and Sign the Bolt [Factory Applications](https://wiki.rdkcentral.com/spaces/RDK/pages/474687726/Factory+Apps+on+RDK8) using the [engineering certs/keys](https://github.com/rdkcentral/bolt-engineering-certificates)
 ```bash
@@ -268,18 +275,7 @@ RDK Docker Builder can:
 ```
 This method uses the scripts/tools from https://github.com/rdkcentral/bolt-pkg-build-scripts but automates it such that the ralfpack binary and other dependencies are part of the container image.
 
-
-- Generate Image without Bolt packages, Apps can then be sideloaded as per [Factory Applications](https://wiki.rdkcentral.com/spaces/RDK/pages/474687726/Factory+Apps+on+RDK8)
-```bash
-./rdk-docker.sh setup -l image-assembler -b <branch>
-```
-
-- Generate Image with default Factory Application Bolt packages
-```bash
-./rdk-docker.sh setup -l image-assembler -b <branch> --include-bolt-package
-```
-It uses the default JSON configuration: https://osspackages.code.rdkcentral.com/apps/bolt/1.0.3/factory_app_version.json
-
+### Create Image Assembler Build with custom Bolt Applications
 - Generate Image using a local bolt configuration JSON file
 ```bash
 ./rdk-docker.sh setup -l image-assembler -b <branch> --include-bolt-package --boltappconfig </home/rdk/workspace/factory-app-version.json>
@@ -330,5 +326,11 @@ Modifying the settings in the factory-app-version.json file will be automated in
 ./rdk-docker.sh setup -l image-assembler -b <branch> --include-bolt-package --boltappconfig <https://abc.json>
 ```
 Uses a user-provided remote JSON URL. The applications and public key provided in the JSON file will be used to populate the image assember build with these packages.
+
+### Sideloading Bolt Applications
+- Generate Image without Bolt packages, Apps can then be sideloaded as per [Factory Applications](https://wiki.rdkcentral.com/spaces/RDK/pages/474687726/Factory+Apps+on+RDK8)
+```bash
+./rdk-docker.sh setup -l image-assembler -b <branch>
+```
 
 ---
