@@ -22,14 +22,14 @@
   * [Create Image Assembler Build with custom Bolt Applications](#create-image-assembler-build-with-custom-bolt-applications)
   * [Sideloading Bolt Applications](#sideloading-bolt-applications)
 - [Usage Notes](#usage-notes)
-  * [Default IPK Versions](#default-ipk-versions)
-  * [Using Remote Versus Local IPK's](#using-remote-versus-local-ipks)
-  * [Running multiple docker builds at same time](#running-multiple-docker-builds-at-same-time)
+  * [IPK Versions](#ipk-versions)
   * [How to view build logs and build output](#how-to-view-build-logs-and-build-output)
   * [How to make changes in your build environment](#how-to-make-changes-in-your-build-environment)
   * [How to get a shell within the docker environment](#how-to-get-a-shell-within-the-docker-environment)
   * [Docker Runtime Info](#docker-runtime-info)
   * [Some Useful Docker Comamnds](#some-useful-docker-comamnds)
+  * [Using Remote Versus Local IPK's](#using-remote-versus-local-ipks)
+  * [Running multiple docker builds at same time](#running-multiple-docker-builds-at-same-time)
   * [Supported Layers](#supported-layers)
 
 <!-- tocstop -->
@@ -301,11 +301,11 @@ Modifying the settings in the factory-app-version.json file will be automated in
 - if the branch name has a `/` it will be replaced with `-` on the filesystem e.g. `feature/test-branch` will be `feature-test-branch`
 - If you wish to override the default versions of IPK used for a layer you must set them explicitly before you do the *setup* phase
 
-### Default IPK Versions
+### IPK Versions
 
-If you do not explicity set the IPK versions before you build then the DEFAULT IPK versions from `<layer>.inc` files will be used.
+The yocto layer build uses the DEFAULT IPK versions from the `<layer>.inc` configuration files.
 
-The default version of the layer may and most likely will be different depending on the BRANCH or TAG of the layer manifest you are building for that layer. (examples from develop branch given below)
+Your build may fail if you have not first built the version of IPK the layer.inc file requirs.
 
 | Layer | INC File | Meta Layer |
 | ----------- | ----------- | ----------- |
@@ -313,17 +313,19 @@ The default version of the layer may and most likely will be different depending
 | Middleware | [middleware.inc](https://github.com/rdkcentral/meta-middleware-release-rdke/blob/develop/conf/machine/include/middleware.inc)| [meta-middleware-release-rdke](https://github.com/rdkcentral/meta-middleware-release-rdke/) |
 | Application | [application.inc](https://github.com/rdkcentral/meta-application-rdke-release/blob/develop/conf/machine/include/application.inc) | [meta-application-rdke-release](https://github.com/rdkcentral/meta-application-rdke-release/) |
 
-*However in this case unless you have built the dependant layer default version the build will fail.*
+In docker you can override the IPK versions as follows, note you must set these vars before you do the `./rdk-docker.sh setup` phase:
 
-### Using Remote Versus Local IPK's
+Vendor:
+```bash
+export VENDOR_IPK_PATH="${HOME}/ipks/raspberrypi4-64-rdke-vendor/VENDOR_IPK_VERSION/ipk"
+export VENDOR_OSS_IPK_PATH="${HOME}/ipks/rdk-arm64-oss-vendor/raspberrypi4-64-rdke-vendor/VENDOR_IPK_VERSION/ipk"
 ```
-The current release of rdk-docker-builder does not support using IPK's from a remote location (e.g. artifactory, http server)
 
-This will be supported in the next version due in 2026 Q3 timeframe.
+Middleware:
+```bash
+export MIDDLEWARE_IPK_PATH="${HOME}/ipks/raspberrypi4-64-rdke-middleware/MIDDLEWARE_IPK_VERSION/ipk"
+export MIDDLEWARE_OSS_IPK_PATH="${HOME}/ipks/rdk-arm64-oss-middleware/raspberrypi4-64-rdke-middleware/MIDDLEWARE_IPK_VERSION/ipk
 ```
-
-### Running multiple docker builds at same time
-Each time you call `./rdk-docker.sh run` it creates a new container using the date and time so each layer build will run in its own container, however running multiple builds at the same time may impact on performance.
 
 ### How to view build logs and build output
 All build output for your layer is accessible form your local filesystem, i.e. you do not need to have the container running to view logs and retrieve images.
@@ -338,7 +340,7 @@ All source code changes in your layer can be made on your local filesystem, i.e.
 The layer source code is available in your clone in the following location.
 
 ```
-<WORKSPACE>/rdk-docker-builder/<layerName>-layer/rdke
+<WORKSPACE>/rdk-docker-builder/<branch or tag>/<layerName>-layer/rdke
 ```
 
 ### How to get a shell within the docker environment
@@ -348,8 +350,9 @@ If you wish to work in the container environment in interactive mode simply run
 ```
 
 ### Docker Runtime Info
-The docker runtime user is `rdk` and home directory is `/home/rdk`
-The external IPK location is mounted in the following location `/home/rdk/ipks` which maps to `${HOME}/ipks`
+- The docker runtime user is `rdk` and home directory is `/home/rdk`
+- The `<WORKSPACE>/rdk-docker-build` directory is mounted in the following location `/home/rdk/workspace`
+- The external IPK location is mounted in the following location `/home/rdk/ipks` which maps to `${HOME}/ipks`
 
 ### Some Useful Docker Comamnds
 ```bash
@@ -365,6 +368,15 @@ docker rmi -f rdk-layer-builder
 # get a shell prompt on a running container
 docker exec -it <container_id_or_name> /bin/bash
 ```
+### Using Remote Versus Local IPK's
+```
+The current release of rdk-docker-builder does not support using IPK's from a remote location (e.g. artifactory, http server)
+
+This will be supported in the next version due in 2026 Q3 timeframe.
+```
+
+### Running multiple docker builds at same time
+Each time you call `./rdk-docker.sh run` it creates a new container using the date and time so each layer build will run in its own container, however running multiple builds at the same time may impact on performance.
 
 ### Supported Layers
 - **oss**: Open Source Software Layer
