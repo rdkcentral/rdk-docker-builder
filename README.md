@@ -38,14 +38,14 @@
 
 ## Introduction
 
-RDK Docker Builder is a RDK Yocto development environment for building RDK-E RPI OSS, VENDOR, MIDDLEWARE, APPLICATION and IMAGE ASSEMBLER Layer Images. It can also be used to build the RDK8 factory firebolt applications (base bolt, wpe and reference ui). 
+RDK Docker Builder is a RDK Yocto development environment for building RDK-E RPI OSS, VENDOR, MIDDLEWARE, APPLICATION and IMAGE ASSEMBLER Raspberry PI 4 Layer Images. It can also be used to build the RDK8 factory firebolt applications (base bolt, wpe and reference ui). 
 
 This Docker can be used to build the [RDK7](https://wiki.rdkcentral.com/spaces/RDK/pages/407524261/RDK7+Release+Notes) and [RDK8](https://wiki.rdkcentral.com/spaces/RDK/pages/476317896/RDK8+Release+Notes) releases along and any active branch or tag for the different rdk video layers.
 
 It is assumed the user is familiar with the RDK-E Layered Architeture. If not please see the latest RDK-E release notes for an overview:
 [RDK-E Code Releases](https://wiki.rdkcentral.com/spaces/CMF/pages/414065624/RDK-E+Video+Code+Releases)
 
-The docker container image is an Ubuntu 20.04 image. [RDK7](https://wiki.rdkcentral.com/spaces/RDK/pages/407524261/RDK7+Release+Notes) and [RDK8](https://wiki.rdkcentral.com/spaces/RDK/pages/476317896/RDK8+Release+Notes) are based on Yocto Version 4 Kirkstone.
+The docker container image is an Ubuntu 20.04 image. [RDK7](https://wiki.rdkcentral.com/spaces/RDK/pages/407524261/RDK7+Release+Notes) and [RDK8](https://wiki.rdkcentral.com/spaces/RDK/pages/476317896/RDK8+Release+Notes) are based on Yocto Version 4 Kirkstone. 
 
 ---
 ## Prerequisites
@@ -318,15 +318,15 @@ In docker you can override the IPK versions as per following example, note you m
 RDK 8 Vendor:
 ```bash
 export VENDOR_IPK_VERSION="RDK8-1.0.0"
-export VENDOR_IPK_PATH="${HOME}/ipks/raspberrypi4-64-rdke-vendor/$VENDOR_IPK_VERSION/ipk"
-export VENDOR_OSS_IPK_PATH="${HOME}/ipks/rdk-arm64-oss-vendor/raspberrypi4-64-rdke-vendor/$VENDOR_IPK_VERSION/ipk"
+export VENDOR_IPK_PATH="${HOME}/ipks/raspberrypi4-64-rdke-vendor/${VENDOR_IPK_VERSION}/ipk"
+export VENDOR_OSS_IPK_PATH="${HOME}/ipks/rdk-arm64-oss-vendor/raspberrypi4-64-rdke-vendor/${VENDOR_IPK_VERSION}/ipk"
 ```
 
 RDK 8 Middleware:
 ```bash
 export MIDDLEWARE_IPK_VERSION="RDK8-1.0.0"
-export MIDDLEWARE_IPK_PATH="${HOME}/ipks/raspberrypi4-64-rdke-middleware/$MIDDLEWARE_IPK_VERSION/ipk"
-export MIDDLEWARE_OSS_IPK_PATH="${HOME}/ipks/rdk-arm64-oss-middleware/raspberrypi4-64-rdke-middleware/$MIDDLEWARE_IPK_VERSION/ipk
+export MIDDLEWARE_IPK_PATH="${HOME}/ipks/raspberrypi4-64-rdke-middleware/${MIDDLEWARE_IPK_VERSION}/ipk"
+export MIDDLEWARE_OSS_IPK_PATH="${HOME}/ipks/rdk-arm64-oss-middleware/raspberrypi4-64-rdke-middleware/${MIDDLEWARE_IPK_VERSION}/ipk
 ```
 
 ### How to view build logs and build output
