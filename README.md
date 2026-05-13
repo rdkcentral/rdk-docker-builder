@@ -28,17 +28,18 @@ You will need sufficient storage space on the host filesystem to perform the bui
 | Layer | Build Size | IPK Size|
 | ----------- | ----------- | ----------- |
 |OSS| 82GB | 860MB |
-|VENDOR| 44GB | 183MB|
-|Middleware| 118GB | 395MB|
-|Application| 56GB | 6.3MB|
+|VENDOR| 44GB | 183MB |
+|Middleware| 118GB | 395MB |
+|Application| 56GB | 6.3MB |
 |Image Assembler| 27GB | NA |
 
 **RDK 8** 
 | Layer | Build Size | IPK Size| OSS IPK Size|
 | ----------- | ----------- | ----------- | ----------- |
 |VENDOR| 52GB | 200MB | 305 MB |
-|Middleware| 51GB | 214MB | 413MB|
+|Middleware| 51GB | 214MB | 413MB |
 |Image Assembler| 27GB | NA | NA |
+|Factory Bolt Applications| 24GB| NA | NA |
 
 *In RDK8 the OSS is built as part of vendor and middleware layers and there is no separate application layer.*
 
