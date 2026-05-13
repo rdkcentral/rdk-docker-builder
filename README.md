@@ -268,7 +268,6 @@ For a detailed explanation of the RDK8 application architecture, packaging model
 It uses the default JSON configuration: https://osspackages.code.rdkcentral.com/apps/bolt/1.0.3/factory_app_version.json
 
 ### Build and Sign the Factory Bolt Applications
-
 - Build and Sign the Bolt [Factory Applications](https://wiki.rdkcentral.com/spaces/RDK/pages/474687726/Factory+Apps+on+RDK8) using the [engineering certs/keys](https://github.com/rdkcentral/bolt-engineering-certificates)
 ```bash
 ./rdk-docker.sh setup --genBoltPackages --bolt-pkg-script-branch <branch>
@@ -277,6 +276,13 @@ It uses the default JSON configuration: https://osspackages.code.rdkcentral.com/
 This method uses the scripts/tools from https://github.com/rdkcentral/bolt-pkg-build-scripts but automates it such that the ralfpack binary and other dependencies are part of the container image.
 
 ### Create Image Assembler Build with custom Bolt Applications
+- Using JSON URL from a webserver
+```bash
+./rdk-docker.sh setup -l image-assembler -b <branch> --include-bolt-package --boltappconfig <https://abc.json>
+./rdk-docker.sh run
+```
+Uses a user-provided webserver JSON URL. The applications and public key provided in the JSON file will be used to populate the image assember build with these packages.
+
 - Generate Image using a local bolt configuration JSON file
 ```bash
 ./rdk-docker.sh setup -l image-assembler -b <branch> --include-bolt-package --boltappconfig </home/rdk/workspace/factory-app-version.json>
@@ -321,14 +327,7 @@ cat factory-app-version.json
 
 ```
 
-Modifying the settings in the factory-app-version.json file will be automated in a future release of RDK Docker Builder.
-
-- Using a custom remote JSON
-```bash
-./rdk-docker.sh setup -l image-assembler -b <branch> --include-bolt-package --boltappconfig <https://abc.json>
-./rdk-docker.sh run
-```
-Uses a user-provided remote JSON URL. The applications and public key provided in the JSON file will be used to populate the image assember build with these packages.
+Modifying the settings in the factory-app-version.json file will be automated in a future release of RDK Docker Builder. It is recommended to put your bolt packages/keys/json on a webserver and use the JSON URL as then no manual modifications are neccessary.
 
 ### Sideloading Bolt Applications
 - Generate Image without Bolt packages, Apps can then be sideloaded as per [Factory Applications](https://wiki.rdkcentral.com/spaces/RDK/pages/474687726/Factory+Apps+on+RDK8)
