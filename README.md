@@ -213,7 +213,7 @@ RDK8 introduces a modern, decoupled application framework that is a significant 
 
 For a detailed explanation of the RDK8 application architecture, packaging model, and migration differences from RDK7, refer to: [Applications on RDK8](https://wiki.rdkcentral.com/spaces/RDK/pages/480904291/Applications+on+RDK8)
 
-### Create Image Assember with default Factory Bolt Applications
+### Create Image Assembler with default Factory Bolt Applications
 - Generate Image with default Factory Application Bolt packages
 ```bash
 ./rdk-docker.sh setup -l image-assembler -b <branch> --include-bolt-package

@@ -219,10 +219,12 @@ setup() {
 
         eval "./generate-rdk-build-env --layer $LAYER --branch \"$REPO_MANIFEST_BRANCH\" > build.env" || {
             print_error "Failed to generate build.env for Bolt packages"
+            deactivate
             exit 1
         }
 
         print_success "Setup completed for building Bolt script packages"
+        deactivate
         return
     fi
 
