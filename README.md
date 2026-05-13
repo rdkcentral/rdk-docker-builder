@@ -259,10 +259,11 @@ RDK8 introduces a modern, decoupled application framework that is a significant 
 
 For a detailed explanation of the RDK8 application architecture, packaging model, and migration differences from RDK7, refer to: [Applications on RDK8](https://wiki.rdkcentral.com/spaces/RDK/pages/480904291/Applications+on+RDK8)
 
-# Create Image Assember with default Factory Bolt Applications
+### Create Image Assember with default Factory Bolt Applications
 - Generate Image with default Factory Application Bolt packages
 ```bash
 ./rdk-docker.sh setup -l image-assembler -b <branch> --include-bolt-package
+./rdk-docker.sh run
 ```
 It uses the default JSON configuration: https://osspackages.code.rdkcentral.com/apps/bolt/1.0.3/factory_app_version.json
 
@@ -279,6 +280,7 @@ This method uses the scripts/tools from https://github.com/rdkcentral/bolt-pkg-b
 - Generate Image using a local bolt configuration JSON file
 ```bash
 ./rdk-docker.sh setup -l image-assembler -b <branch> --include-bolt-package --boltappconfig </home/rdk/workspace/factory-app-version.json>
+./rdk-docker.sh run
 ```
 Uses a local JSON file however with the current implementation the file path must be accessible inside the Docker container so you need to copy your bolt applications, your public cert/key and edit the json file to use the docker container paths.
 
@@ -324,6 +326,7 @@ Modifying the settings in the factory-app-version.json file will be automated in
 - Using a custom remote JSON
 ```bash
 ./rdk-docker.sh setup -l image-assembler -b <branch> --include-bolt-package --boltappconfig <https://abc.json>
+./rdk-docker.sh run
 ```
 Uses a user-provided remote JSON URL. The applications and public key provided in the JSON file will be used to populate the image assember build with these packages.
 
@@ -331,6 +334,7 @@ Uses a user-provided remote JSON URL. The applications and public key provided i
 - Generate Image without Bolt packages, Apps can then be sideloaded as per [Factory Applications](https://wiki.rdkcentral.com/spaces/RDK/pages/474687726/Factory+Apps+on+RDK8)
 ```bash
 ./rdk-docker.sh setup -l image-assembler -b <branch>
+./rdk-docker.sh run
 ```
 
 ---
