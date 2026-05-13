@@ -1,5 +1,41 @@
 # RDK Docker Builder
 
+<!-- toc -->
+
+- [Introduction](#introduction)
+- [Prerequisites](#prerequisites)
+  * [Host Tools](#host-tools)
+  * [Storage Space](#storage-space)
+  * [Systems Tested](#systems-tested)
+- [Quick Start](#quick-start)
+  * [Configure IPK Storage Location](#configure-ipk-storage-location)
+  * [Create the RDK Docker Builder Container Image](#create-the-rdk-docker-builder-container-image)
+  * [Building a Layer](#building-a-layer)
+  * [RDK7 Build Commands](#rdk7-build-commands)
+  * [RDK8 Build Commands](#rdk8-build-commands)
+- [IPK Package Feed](#ipk-package-feed)
+- [RDK Docker Builder Structure](#rdk-docker-builder-structure)
+- [Build the RDK Layer and Generate the IPK's](#build-the-rdk-layer-and-generate-the-ipks)
+- [Using RDK Docker Build with Bolt Applications](#using-rdk-docker-build-with-bolt-applications)
+  * [Create Image Assember with default Factory Bolt Applications](#create-image-assember-with-default-factory-bolt-applications)
+  * [Build and Sign the Factory Bolt Applications](#build-and-sign-the-factory-bolt-applications)
+  * [Create Image Assembler Build with custom Bolt Applications](#create-image-assembler-build-with-custom-bolt-applications)
+  * [Sideloading Bolt Applications](#sideloading-bolt-applications)
+- [Usage Notes](#usage-notes)
+  * [Default IPK Versions](#default-ipk-versions)
+  * [Using Remote Versus Local IPK's](#using-remote-versus-local-ipks)
+  * [Running multiple docker builds at same time](#running-multiple-docker-builds-at-same-time)
+  * [How to view build logs and build output](#how-to-view-build-logs-and-build-output)
+  * [How to make changes in your build environment](#how-to-make-changes-in-your-build-environment)
+  * [How to get a shell within the docker environment](#how-to-get-a-shell-within-the-docker-environment)
+  * [Docker Runtime Info](#docker-runtime-info)
+  * [Some Useful Docker Comamnds](#some-useful-docker-comamnds)
+  * [Supported Layers](#supported-layers)
+
+<!-- tocstop -->
+
+---
+
 ## Introduction
 
 RDK Docker Builder is a RDK Yocto development environment for building RDK-E RPI OSS, VENDOR, MIDDLEWARE, APPLICATION and IMAGE ASSEMBLER Layer Images. It can also be used to build the RDK8 factory firebolt applications (base bolt, wpe and reference ui). 
@@ -170,88 +206,6 @@ There are two phases to the layer build process
    - once complete will store the IPK's as per your `~/$HOME/ipks` directory location
    - the image can be retreived from the build output directory `<branch or tag>/<layerName>-<layer>/build-raspberrypi4-64-rdke/tmp/deploy/images/raspberrypi4-64-rdke`
 
-
----
-## Usage Notes
-
-- You must build the layers in order 
-    - RDK7: OSS, VENDOR, MIDDLEWARE, APPLICATION, IMAGE ASSEMBLER
-    - RDK8: VENDOR, MIDDLEWARE, IMAGE ASSEMBLER
-- If you want to build a different layer you must re-run `./rdk-docker.sh setup` before running `./rdk-docker.sh run`
-- if the branch name has a `/` it will be replaced with `-` on the filesystem e.g. `feature/test-branch` will be `feature-test-branch`
-- If you wish to override the default versions of IPK used for a layer you must set them explicitly before you do the *setup* phase
-
-### Default IPK Versions
-
-If you do not explicity set the IPK versions before you build then the DEFAULT IPK versions from `<layer>.inc` files will be used.
-
-The default version of the layer may and most likely will be different depending on the BRANCH or TAG of the layer manifest you are building for that layer. (examples from develop branch given below)
-
-| Layer | INC File | Meta Layer |
-| ----------- | ----------- | ----------- |
-| Vendor | [vendor.inc](https://github.com/rdkcentral/meta-vendor-raspberrypi-release/blob/develop/conf/machine/include/vendor.inc) | [meta-vendor-raspberrypi-release](https://github.com/rdkcentral/meta-vendor-raspberrypi-release/) |
-| Middleware | [middleware.inc](https://github.com/rdkcentral/meta-middleware-release-rdke/blob/develop/conf/machine/include/middleware.inc)| [meta-middleware-release-rdke](https://github.com/rdkcentral/meta-middleware-release-rdke/) |
-| Application | [application.inc](https://github.com/rdkcentral/meta-application-rdke-release/blob/develop/conf/machine/include/application.inc) | [meta-application-rdke-release](https://github.com/rdkcentral/meta-application-rdke-release/) |
-
-*However in this case unless you have built the dependant layer default version the build will fail.*
-
-### Using Remote Versus Local IPK's
-```
-The current release of rdk-docker-builder does not support using IPK's from a remote location (e.g. artifactory, http server)
-
-This will be supported in the next version due in 2026 Q3 timeframe.
-```
-
-### Running multiple docker builds at same time
-Each time you call `./rdk-docker.sh run` it creates a new container using the date and time so each layer build will run in its own container, however running multiple builds at the same time may impact on performance.
-
-### How to view build logs and build output
-All build output for your layer is accessible form your local filesystem, i.e. you do not need to have the container running to view logs and retrieve images.
-The layer build output available in your clone in the following location.
-
-```
-<WORKSPACE>/rdk-docker-builder/<manifest branch or tag>/<layerName>-layer/build-raspberrypi4-64-rdke
-```
-
-### How to make changes in your build environment
-All source code changes in your layer can be made on your local filesystem, i.e. you do not need to have the container running to make changes.
-The layer source code is available in your clone in the following location.
-
-```
-<WORKSPACE>/rdk-docker-builder/<layerName>-layer/rdke
-```
-
-### How to get a shell within the docker environment
-If you wish to work in the container environment in interactive mode simply run
-```
-./rdk-docker.sh shell
-```
-
-### Docker Runtime Info
-The docker runtime user is `rdk` and home directory is `/home/rdk`
-The external IPK location is mounted in the following location `/home/rdk/ipks` which maps to `${HOME}/ipks`
-
-### Some Useful Docker Comamnds
-```bash
-# get a list of active images
-docker images
-
-# get list of running docker containers
-docker ps
-
-# if you wish to delete the image e.g run
-docker rmi -f rdk-layer-builder
-
-# get a shell prompt on a running container
-docker exec -it <container_id_or_name> /bin/bash
-```
-
-### Supported Layers
-- **oss**: Open Source Software Layer
-- **vendor**: Vendor Layer
-- **middleware**: Middleware Layer
-- **application**: Application Layer
-- **image-assembler**: Image Assembly Layer (Final Image)
 ---
 
 ## Using RDK Docker Build with Bolt Applications
@@ -335,5 +289,88 @@ Modifying the settings in the factory-app-version.json file will be automated in
 ./rdk-docker.sh setup -l image-assembler -b <branch>
 ./rdk-docker.sh run
 ```
+
+---
+
+## Usage Notes
+
+- You must build the layers in order 
+    - RDK7: OSS, VENDOR, MIDDLEWARE, APPLICATION, IMAGE ASSEMBLER
+    - RDK8: VENDOR, MIDDLEWARE, IMAGE ASSEMBLER
+- If you want to build a different layer you must re-run `./rdk-docker.sh setup` before running `./rdk-docker.sh run`
+- if the branch name has a `/` it will be replaced with `-` on the filesystem e.g. `feature/test-branch` will be `feature-test-branch`
+- If you wish to override the default versions of IPK used for a layer you must set them explicitly before you do the *setup* phase
+
+### Default IPK Versions
+
+If you do not explicity set the IPK versions before you build then the DEFAULT IPK versions from `<layer>.inc` files will be used.
+
+The default version of the layer may and most likely will be different depending on the BRANCH or TAG of the layer manifest you are building for that layer. (examples from develop branch given below)
+
+| Layer | INC File | Meta Layer |
+| ----------- | ----------- | ----------- |
+| Vendor | [vendor.inc](https://github.com/rdkcentral/meta-vendor-raspberrypi-release/blob/develop/conf/machine/include/vendor.inc) | [meta-vendor-raspberrypi-release](https://github.com/rdkcentral/meta-vendor-raspberrypi-release/) |
+| Middleware | [middleware.inc](https://github.com/rdkcentral/meta-middleware-release-rdke/blob/develop/conf/machine/include/middleware.inc)| [meta-middleware-release-rdke](https://github.com/rdkcentral/meta-middleware-release-rdke/) |
+| Application | [application.inc](https://github.com/rdkcentral/meta-application-rdke-release/blob/develop/conf/machine/include/application.inc) | [meta-application-rdke-release](https://github.com/rdkcentral/meta-application-rdke-release/) |
+
+*However in this case unless you have built the dependant layer default version the build will fail.*
+
+### Using Remote Versus Local IPK's
+```
+The current release of rdk-docker-builder does not support using IPK's from a remote location (e.g. artifactory, http server)
+
+This will be supported in the next version due in 2026 Q3 timeframe.
+```
+
+### Running multiple docker builds at same time
+Each time you call `./rdk-docker.sh run` it creates a new container using the date and time so each layer build will run in its own container, however running multiple builds at the same time may impact on performance.
+
+### How to view build logs and build output
+All build output for your layer is accessible form your local filesystem, i.e. you do not need to have the container running to view logs and retrieve images.
+The layer build output available in your clone in the following location.
+
+```
+<WORKSPACE>/rdk-docker-builder/<manifest branch or tag>/<layerName>-layer/build-raspberrypi4-64-rdke
+```
+
+### How to make changes in your build environment
+All source code changes in your layer can be made on your local filesystem, i.e. you do not need to have the container running to make changes.
+The layer source code is available in your clone in the following location.
+
+```
+<WORKSPACE>/rdk-docker-builder/<layerName>-layer/rdke
+```
+
+### How to get a shell within the docker environment
+If you wish to work in the container environment in interactive mode simply run
+```
+./rdk-docker.sh shell
+```
+
+### Docker Runtime Info
+The docker runtime user is `rdk` and home directory is `/home/rdk`
+The external IPK location is mounted in the following location `/home/rdk/ipks` which maps to `${HOME}/ipks`
+
+### Some Useful Docker Comamnds
+```bash
+# get a list of active images
+docker images
+
+# get list of running docker containers
+docker ps
+
+# if you wish to delete the image e.g run
+docker rmi -f rdk-layer-builder
+
+# get a shell prompt on a running container
+docker exec -it <container_id_or_name> /bin/bash
+```
+
+### Supported Layers
+- **oss**: Open Source Software Layer
+- **vendor**: Vendor Layer
+- **middleware**: Middleware Layer
+- **application**: Application Layer
+- **image-assembler**: Image Assembly Layer (Final Image)
 
 ---
