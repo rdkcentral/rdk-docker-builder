@@ -92,20 +92,19 @@ Examples:
     ----------------------------------------------------------------------
     Bolt Application configuration for IA layer (can be local file or URL)
     ----------------------------------------------------------------------
-    $0 setup -l image-assembler -b <branch> --include-bolt-package --boltappconfig <path>/factory-app-version.json 
     $0 setup -l image-assembler -b <branch> --include-bolt-package --boltappconfig https://<abc.json> 
+    $0 setup -l image-assembler -b <branch> --include-bolt-package --boltappconfig <path>/factory-app-version.json 
     
     -----------
     Layer Build
     -----------
     $0 run              # Run build process (uses build.env generated from setup step)
-    $0 run bolt-package # add bolt-package option if building IA with bolt applications (image-assembler layer only)
-
+  
     ----------------------------------------
     Build and Sign Factory Bolt Applications
     ----------------------------------------
-    $0 setup --genBoltPackages --bolt-pkg-script-branch develop   
-    $0 run bolt-package    
+    $0 setup --genBoltPackages --bolt-pkg-script-branch <branch>  
+    $0 run bolt-package 
 
 EOF
 }
@@ -173,7 +172,7 @@ python_setup() {
 
     # Ensure jsonschema is installed
     if python3 -c "import jsonschema" 2>/dev/null; then
-        print_info "jsonschema  is already installed."
+        print_info "jsonschema is already installed."
     else
         print_info "jsonschema not found. Installing..."
         pip3 install jsonschema || {
@@ -184,7 +183,7 @@ python_setup() {
 
     # Ensure PyYaml is installed
     if python3 -c "import yaml" 2>/dev/null; then
-        print_info "pyyaml  is already installed."
+        print_info "pyyaml is already installed."
     else
         print_info "PyYaml not found. Installing..."
         pip3 install pyyaml || {

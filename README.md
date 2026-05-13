@@ -2,12 +2,14 @@
 
 ## Introduction
 
-RDK Docker Builder is a RDK Yocto development environment for building RDK-E RPI OSS, VENDOR, MIDDLEWARE, APPLICATION and IMAGE ASSEMBLER Layer Images. It can also be used to build the RDK8 factory firebolt applications (base bolt, wpe and reference ui).
+RDK Docker Builder is a RDK Yocto development environment for building RDK-E RPI OSS, VENDOR, MIDDLEWARE, APPLICATION and IMAGE ASSEMBLER Layer Images. It can also be used to build the RDK8 factory firebolt applications (base bolt, wpe and reference ui). 
 
 This Docker can be used to build the [RDK7](https://wiki.rdkcentral.com/spaces/RDK/pages/407524261/RDK7+Release+Notes) and [RDK8](https://wiki.rdkcentral.com/spaces/RDK/pages/476317896/RDK8+Release+Notes) releases along and any active branch or tag for the different rdk video layers.
 
 It is assumed the user is familiar with the RDK-E Layered Architeture. If not please see the latest RDK-E release notes for an overview:
 [RDK-E Code Releases](https://wiki.rdkcentral.com/spaces/CMF/pages/414065624/RDK-E+Video+Code+Releases)
+
+The docker container image is an Ubuntu 20.04 image. [RDK7](https://wiki.rdkcentral.com/spaces/RDK/pages/407524261/RDK7+Release+Notes) and [RDK8](https://wiki.rdkcentral.com/spaces/RDK/pages/476317896/RDK8+Release+Notes) are based on Yocto Version 4 Kirkstone.
 
 ---
 ## Prerequisites
@@ -281,7 +283,46 @@ It uses the default JSON configuration: https://osspackages.code.rdkcentral.com/
 ```bash
 ./rdk-docker.sh setup -l image-assembler -b <branch> --include-bolt-package --boltappconfig </home/rdk/workspace/factory-app-version.json>
 ```
-Uses a local JSON file, note the file path must be accessible inside the Docker container.
+Uses a local JSON file however with the current implementation the file path must be accessible inside the Docker container so you need to copy your bolt applications, your public cert/key and edit the json file to use the docker container paths.
+
+For example
+```bash
+cd <WORKSPACE>/rdk-docker-builder
+mkdir my-bolt-apps
+cp <your prebuilt bolt apps>/*.bolt  my-bolt-apps/
+cp <your public key>/*.[crt][pem] my-bolt-apps/
+cp <your factory-app-version.json> my-bolt-apps/
+
+# edit your json to use the docker mounted paths, e.g.
+# replace <WORKSPACE>/rdk-docker-builder> path with /home/rdk/workspace/ which is the docker path
+cat factory-app-version.json
+[
+  {
+    "packagename": "my-application-1.bolt",
+    "srcuri": "file:///home/rdk/workspace/my-bolt-apps/my-application-1.bolt",
+    "sha256sum": "9b143a6df1f1e2202606847c8a4438aa05bdb8b6c6f87e64fe1c0f7102f0941f"
+  },
+  {
+    "packagename": "my-application-2.bolt",
+    "srcuri": "file:///home/rdk/workspace/my-bolt-apps/my-application-2.bolt",
+    "sha256sum": "e26d0a9731df67ef24e9189c7a763f64a0d01d089ad211051c27ced79eb1317a"
+  },
+  {
+    "packagename": "my-application-3.bolt",
+    "srcuri": "file:///home/rdk/workspace/my-bolt-apps/my-application-3.bolt",
+    "sha256sum": "b563fc4166139e26a321ae2e1b1e1427f8ff99160e34cd79daa3928b5c748659"
+  },
+  {
+    "packagename": "signing-cert.pem",
+    "srcuri": "file:///home/rdk/workspace/my-bolt-apps/signing-cert.pem",
+    "sha256sum": "a71aa6cda766093120a6fb5b855debdddb71ae2ab537f116491994d8fb51429e",
+    "installpath": "/etc/rdk/certs"
+  }
+]
+
+```
+
+Modifying the settings in the factory-app-version.json file will be automated in a future release of RDK Docker Builder.
 
 - Using a custom remote JSON
 ```bash
