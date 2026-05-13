@@ -40,7 +40,7 @@
 
 RDK Docker Builder is a RDK Yocto development environment for building RDK-E RPI OSS, VENDOR, MIDDLEWARE, APPLICATION and IMAGE ASSEMBLER Raspberry PI 4 Layer Images. It can also be used to build the RDK8 factory firebolt applications (base bolt, wpe and reference ui). 
 
-This Docker can be used to build the [RDK7](https://wiki.rdkcentral.com/spaces/RDK/pages/407524261/RDK7+Release+Notes) and [RDK8](https://wiki.rdkcentral.com/spaces/RDK/pages/476317896/RDK8+Release+Notes) releases along and any active branch or tag for the different rdk video layers.
+This Docker can be used to build the [RDK7](https://wiki.rdkcentral.com/spaces/RDK/pages/407524261/RDK7+Release+Notes) and [RDK8](https://wiki.rdkcentral.com/spaces/RDK/pages/476317896/RDK8+Release+Notes) releases and any active branch or tag for the different rdk video layers.
 
 It is assumed the user is familiar with the RDK-E Layered Architecture. If not please see the latest RDK-E release notes for an overview:
 [RDK-E Code Releases](https://wiki.rdkcentral.com/spaces/CMF/pages/414065624/RDK-E+Video+Code+Releases)
@@ -242,7 +242,7 @@ Uses a user-provided webserver JSON URL. The applications and public key provide
 ./rdk-docker.sh setup -l image-assembler -b <branch> --include-bolt-package --boltappconfig </home/rdk/workspace/factory-app-version.json>
 ./rdk-docker.sh run
 ```
-Uses a local JSON file however with the current implementation the file path must be accessible inside the Docker container so you need to copy your bolt applications, your public cert/key and edit the json file to use the docker container paths.
+Uses a local JSON file however with the current implementation the file path must be accessible inside the Docker container so you need to copy your bolt applications, your public cert/key and edit the json file to use docker container paths.
 
 For example
 ```bash
@@ -281,7 +281,7 @@ cat factory-app-version.json
 
 ```
 
-Modifying the settings in the factory-app-version.json file will be automated in a future release of RDK Docker Builder. It is recommended to put your bolt packages/keys/json on a webserver and use the JSON URL as then no manual modifications are necessary.
+Modifying the settings in the factory-app-version.json file will be automated in a future release of RDK Docker Builder. It is recommended to store your bolt packages/keys/json on a webserver and use the JSON URL method as then no manual modifications are necessary.
 
 ### Sideloading Bolt Applications
 - Generate Image without Bolt packages, Apps can then be sideloaded as per [Factory Applications](https://wiki.rdkcentral.com/spaces/RDK/pages/474687726/Factory+Apps+on+RDK8)
