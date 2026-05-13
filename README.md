@@ -42,7 +42,7 @@ RDK Docker Builder is a RDK Yocto development environment for building RDK-E RPI
 
 This Docker can be used to build the [RDK7](https://wiki.rdkcentral.com/spaces/RDK/pages/407524261/RDK7+Release+Notes) and [RDK8](https://wiki.rdkcentral.com/spaces/RDK/pages/476317896/RDK8+Release+Notes) releases along and any active branch or tag for the different rdk video layers.
 
-It is assumed the user is familiar with the RDK-E Layered Architeture. If not please see the latest RDK-E release notes for an overview:
+It is assumed the user is familiar with the RDK-E Layered Architecture. If not please see the latest RDK-E release notes for an overview:
 [RDK-E Code Releases](https://wiki.rdkcentral.com/spaces/CMF/pages/414065624/RDK-E+Video+Code+Releases)
 
 The docker container image is an Ubuntu 20.04 image. [RDK7](https://wiki.rdkcentral.com/spaces/RDK/pages/407524261/RDK7+Release+Notes) and [RDK8](https://wiki.rdkcentral.com/spaces/RDK/pages/476317896/RDK8+Release+Notes) are based on Yocto Version 4 Kirkstone. 
@@ -204,7 +204,7 @@ There are two phases to the layer build process
 - *run* 
    - runs the docker which in turns automatically triggers the layer build 
    - once complete will store the IPK's as per your `~/$HOME/ipks` directory location
-   - the image can be retreived from the build output directory `<branch or tag>/<layerName>-<layer>/build-raspberrypi4-64-rdke/tmp/deploy/images/raspberrypi4-64-rdke`
+   - the image can be retrieved from the build output directory `<branch or tag>/<layerName>-<layer>/build-raspberrypi4-64-rdke/tmp/deploy/images/raspberrypi4-64-rdke`
 
 ---
 
@@ -281,7 +281,7 @@ cat factory-app-version.json
 
 ```
 
-Modifying the settings in the factory-app-version.json file will be automated in a future release of RDK Docker Builder. It is recommended to put your bolt packages/keys/json on a webserver and use the JSON URL as then no manual modifications are neccessary.
+Modifying the settings in the factory-app-version.json file will be automated in a future release of RDK Docker Builder. It is recommended to put your bolt packages/keys/json on a webserver and use the JSON URL as then no manual modifications are necessary.
 
 ### Sideloading Bolt Applications
 - Generate Image without Bolt packages, Apps can then be sideloaded as per [Factory Applications](https://wiki.rdkcentral.com/spaces/RDK/pages/474687726/Factory+Apps+on+RDK8)
@@ -326,7 +326,7 @@ RDK 8 Middleware:
 ```bash
 export MIDDLEWARE_IPK_VERSION="RDK8-1.0.0"
 export MIDDLEWARE_IPK_PATH="${HOME}/ipks/raspberrypi4-64-rdke-middleware/${MIDDLEWARE_IPK_VERSION}/ipk"
-export MIDDLEWARE_OSS_IPK_PATH="${HOME}/ipks/rdk-arm64-oss-middleware/raspberrypi4-64-rdke-middleware/${MIDDLEWARE_IPK_VERSION}/ipk
+export MIDDLEWARE_OSS_IPK_PATH="${HOME}/ipks/rdk-arm64-oss-middleware/raspberrypi4-64-rdke-middleware/${MIDDLEWARE_IPK_VERSION}/ipk"
 ```
 
 ### How to view build logs and build output
@@ -356,7 +356,7 @@ If you wish to work in the container environment in interactive mode simply run
 - The `<WORKSPACE>/rdk-docker-build` directory is mounted in the following location `/home/rdk/workspace`
 - The external IPK location is mounted in the following location `/home/rdk/ipks` which maps to `${HOME}/ipks`
 
-### Some Useful Docker Comamnds
+### Some Useful Docker Commands
 ```bash
 # get a list of active images
 docker images
