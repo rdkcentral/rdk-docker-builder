@@ -305,7 +305,7 @@ Modifying the settings in the factory-app-version.json file will be automated in
 
 The yocto layer build uses the DEFAULT IPK versions from the `<layer>.inc` configuration files.
 
-Your build may fail if you have not first built the version of IPK the layer.inc file requirs.
+Your build may fail if you have not first built the version of IPK the layer.inc file requires.
 
 | Layer | INC File | Meta Layer |
 | ----------- | ----------- | ----------- |
@@ -313,18 +313,20 @@ Your build may fail if you have not first built the version of IPK the layer.inc
 | Middleware | [middleware.inc](https://github.com/rdkcentral/meta-middleware-release-rdke/blob/develop/conf/machine/include/middleware.inc)| [meta-middleware-release-rdke](https://github.com/rdkcentral/meta-middleware-release-rdke/) |
 | Application | [application.inc](https://github.com/rdkcentral/meta-application-rdke-release/blob/develop/conf/machine/include/application.inc) | [meta-application-rdke-release](https://github.com/rdkcentral/meta-application-rdke-release/) |
 
-In docker you can override the IPK versions as follows, note you must set these vars before you do the `./rdk-docker.sh setup` phase:
+In docker you can override the IPK versions as per following example, note you must set these vars before you do the `./rdk-docker.sh setup` phase:
 
-Vendor:
+RDK 8 Vendor:
 ```bash
-export VENDOR_IPK_PATH="${HOME}/ipks/raspberrypi4-64-rdke-vendor/VENDOR_IPK_VERSION/ipk"
-export VENDOR_OSS_IPK_PATH="${HOME}/ipks/rdk-arm64-oss-vendor/raspberrypi4-64-rdke-vendor/VENDOR_IPK_VERSION/ipk"
+export VENDOR_IPK_VERSION="RDK8-1.0.0"
+export VENDOR_IPK_PATH="${HOME}/ipks/raspberrypi4-64-rdke-vendor/$VENDOR_IPK_VERSION/ipk"
+export VENDOR_OSS_IPK_PATH="${HOME}/ipks/rdk-arm64-oss-vendor/raspberrypi4-64-rdke-vendor/$VENDOR_IPK_VERSION/ipk"
 ```
 
-Middleware:
+RDK 8 Middleware:
 ```bash
-export MIDDLEWARE_IPK_PATH="${HOME}/ipks/raspberrypi4-64-rdke-middleware/MIDDLEWARE_IPK_VERSION/ipk"
-export MIDDLEWARE_OSS_IPK_PATH="${HOME}/ipks/rdk-arm64-oss-middleware/raspberrypi4-64-rdke-middleware/MIDDLEWARE_IPK_VERSION/ipk
+export MIDDLEWARE_IPK_VERSION="RDK8-1.0.0"
+export MIDDLEWARE_IPK_PATH="${HOME}/ipks/raspberrypi4-64-rdke-middleware/$MIDDLEWARE_IPK_VERSION/ipk"
+export MIDDLEWARE_OSS_IPK_PATH="${HOME}/ipks/rdk-arm64-oss-middleware/raspberrypi4-64-rdke-middleware/$MIDDLEWARE_IPK_VERSION/ipk
 ```
 
 ### How to view build logs and build output
