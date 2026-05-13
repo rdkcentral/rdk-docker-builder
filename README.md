@@ -17,7 +17,7 @@
 - [RDK Docker Builder Structure](#rdk-docker-builder-structure)
 - [Build the RDK Layer and Generate the IPK's](#build-the-rdk-layer-and-generate-the-ipks)
 - [Using RDK Docker Build with Bolt Applications](#using-rdk-docker-build-with-bolt-applications)
-  * [Create Image Assember with default Factory Bolt Applications](#create-image-assember-with-default-factory-bolt-applications)
+  * [Create Image Assembler with default Factory Bolt Applications](#create-image-assember-with-default-factory-bolt-applications)
   * [Build and Sign the Factory Bolt Applications](#build-and-sign-the-factory-bolt-applications)
   * [Create Image Assembler Build with custom Bolt Applications](#create-image-assembler-build-with-custom-bolt-applications)
   * [Sideloading Bolt Applications](#sideloading-bolt-applications)
@@ -27,7 +27,7 @@
   * [How to make changes in your build environment](#how-to-make-changes-in-your-build-environment)
   * [How to get a shell within the docker environment](#how-to-get-a-shell-within-the-docker-environment)
   * [Docker Runtime Info](#docker-runtime-info)
-  * [Some Useful Docker Comamnds](#some-useful-docker-comamnds)
+  * [Some Useful Docker Commands](#some-useful-docker-comamnds)
   * [Using Remote Versus Local IPK's](#using-remote-versus-local-ipks)
   * [Running multiple docker builds at same time](#running-multiple-docker-builds-at-same-time)
   * [Supported Layers](#supported-layers)
@@ -330,7 +330,7 @@ export MIDDLEWARE_OSS_IPK_PATH="${HOME}/ipks/rdk-arm64-oss-middleware/raspberryp
 ```
 
 ### How to view build logs and build output
-All build output for your layer is accessible form your local filesystem, i.e. you do not need to have the container running to view logs and retrieve images.
+All build output for your layer is accessible from your local filesystem, i.e. you do not need to have the container running to view logs and retrieve images.
 The layer build output available in your clone in the following location.
 
 ```
