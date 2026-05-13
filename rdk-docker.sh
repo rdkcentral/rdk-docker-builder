@@ -87,7 +87,7 @@ Examples:
     $0 setup -l vendor -b develop                                   # Build vendor layer with develop branch
     $0 setup -l middleware -b develop                               # Build middleware layer with develop branch
     $0 setup -l image-assembler -b develop                          # Build image assembler layer with develop branch (no bolt apps)
-    $0 setup -l image-assembler -b develop --include-bolt-package   # include default bolt applicationsin IA build
+    $0 setup -l image-assembler -b develop --include-bolt-package   # include default bolt applications in IA build
     
     ----------------------------------------------------------------------
     Bolt Application configuration for IA layer (can be local file or URL)
