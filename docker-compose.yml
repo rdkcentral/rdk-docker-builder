@@ -1,0 +1,120 @@
+# If not stated otherwise in this file or this component's LICENSE file the
+# following copyright and licenses apply:
+#
+# Copyright 2026 RDK Management
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+version: '3.8'
+
+services:
+  rdk-layer-builder:
+    build:
+      context: .
+      args:
+        USER_ID: ${USER_ID:-1000}
+        GROUP_ID: ${GROUP_ID:-1000}
+        USERNAME: ${USERNAME:-rdk}
+    image: rdk-layer-builder:latest
+    container_name: rdk-layer-builder
+    working_dir: /home/rdk/workspace
+    user: "${USER_ID:-1000}:${GROUP_ID:-1000}"
+    volumes:
+      - .:/home/rdk/workspace
+      - ~/.ssh:/home/rdk/.ssh:ro
+      - ~/.gitconfig:/home/rdk/.gitconfig:ro
+      - ~/.netrc:/home/rdk/.netrc:ro
+    environment:
+      - LANG=en_US.UTF-8
+      - LC_ALL=en_US.UTF-8
+      - LANGUAGE=en_US.UTF-8
+      - MACHINE=${MACHINE:-raspberrypi4-64-rdk-android-hybrid}
+      - DISTRO=${DISTRO:-rdk-generic-hybrid}
+    stdin_open: true
+    tty: true
+    profiles:
+      - interactive
+
+  rdk-layer-setup:
+    build:
+      context: .
+      args:
+        USER_ID: ${USER_ID:-1000}
+        GROUP_ID: ${GROUP_ID:-1000}
+        USERNAME: ${USERNAME:-rdk}
+    image: rdk-layer-builder:latest
+    container_name: rdk-layer-setup
+    working_dir: /home/rdk/workspace
+    user: "${USER_ID:-1000}:${GROUP_ID:-1000}"
+    volumes:
+      - .:/home/rdk/workspace
+      - ~/.ssh:/home/rdk/.ssh:ro
+      - ~/.gitconfig:/home/rdk/.gitconfig:ro
+      - ~/.netrc:/home/rdk/.netrc:ro
+    command: setup
+    profiles:
+      - setup
+
+  rdk-layer-build:
+    build:
+      context: .
+      args:
+        USER_ID: ${USER_ID:-1000}
+        GROUP_ID: ${GROUP_ID:-1000}
+        USERNAME: ${USERNAME:-rdk}
+    image: rdk-layer-builder:latest
+    container_name: rdk-layer-build
+    working_dir: /home/rdk/workspace
+    user: "${USER_ID:-1000}:${GROUP_ID:-1000}"
+    volumes:
+      - .:/home/rdk/workspace
+      - ~/.ssh:/home/rdk/.ssh:ro
+      - ~/.gitconfig:/home/rdk/.gitconfig:ro
+      - ~/.netrc:/home/rdk/.netrc:ro
+    environment:
+      - LANG=en_US.UTF-8
+      - LC_ALL=en_US.UTF-8
+      - LANGUAGE=en_US.UTF-8
+      - MACHINE=${MACHINE:-raspberrypi4-64-rdk-android-hybrid}
+      - DISTRO=${DISTRO:-rdk-generic-hybrid}
+    command: build
+    profiles:
+      - build
+
+  rdk-layer-shell:
+    build:
+      context: .
+      args:
+        USER_ID: ${USER_ID:-1000}
+        GROUP_ID: ${GROUP_ID:-1000}
+        USERNAME: ${USERNAME:-rdk}
+    image: rdk-layer-builder:latest
+    container_name: rdk-layer-shell
+    working_dir: /home/rdk/workspace
+    user: "${USER_ID:-1000}:${GROUP_ID:-1000}"
+    volumes:
+      - .:/home/rdk/workspace
+      - ~/.ssh:/home/rdk/.ssh:ro
+      - ~/.gitconfig:/home/rdk/.gitconfig:ro
+      - ~/.netrc:/home/rdk/.netrc:ro
+    environment:
+      - LANG=en_US.UTF-8
+      - LC_ALL=en_US.UTF-8
+      - LANGUAGE=en_US.UTF-8
+      - MACHINE=${MACHINE:-raspberrypi4-64-rdk-android-hybrid}
+      - DISTRO=${DISTRO:-rdk-generic-hybrid}
+    command: shell
+    stdin_open: true
+    tty: true
+    profiles:
+      - shell 

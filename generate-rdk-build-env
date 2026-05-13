@@ -1,0 +1,269 @@
+#!/usr/bin/env python3
+#
+# If not stated otherwise in this file or this component's LICENSE file the
+# following copyright and licenses apply:
+#
+# Copyright 2026 RDK Management
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+"""
+RDK Setup Script - Generate RDK build environment from YAML configuration
+
+Build environment setup is written to stdout.
+"""
+
+import argparse
+import os
+import sys
+from datetime import datetime, timezone
+from pathlib import Path
+from typing import Any
+
+
+class Colors:
+    """ANSI color codes for terminal output."""
+
+    BLUE: str = "\033[1;34m"
+    GREEN: str = "\033[1;32m"
+    YELLOW: str = "\033[1;33m"
+    RED: str = "\033[1;31m"
+    RESET: str = "\033[0m"
+
+
+class Log:
+    """Helper class to generate log output
+
+    Note that this has nothing to do with the Python `logging` module
+    and its output cannot be filtered by log level, it just outputs
+    messages to `stderr` (which means that it will not interfere with
+    the build environment information written to `stdout`).
+    """
+
+    @staticmethod
+    def _print_message(message: str, color: str, prefix: str) -> None:
+        """Prints the log message with a suitably colored prefix"""
+        print(f"{color}[{prefix}]{Colors.RESET} {message}", file=sys.stderr)
+
+    @classmethod
+    def info(cls, message: str) -> None:
+        """Prints a log message at INFO level"""
+        cls._print_message(message, Colors.BLUE, "INFO")
+
+    @classmethod
+    def success(cls, message: str) -> None:
+        """Prints a log message at SUCCESS level"""
+        cls._print_message(message, Colors.GREEN, "SUCCESS")
+
+    @classmethod
+    def warning(cls, message: str) -> None:
+        """Prints a log message at WARNING level"""
+        cls._print_message(message, Colors.YELLOW, "WARNING")
+
+    @classmethod
+    def error(cls, message: str) -> None:
+        """Prints a log message at ERROR level"""
+        cls._print_message(message, Colors.RED, "ERROR")
+
+
+try:
+    import jsonschema
+except ImportError:
+    Log.error("jsonschema is required. Install with: pip install jsonschema")
+    sys.exit(1)
+
+try:
+    from mako.template import Template
+except ImportError:
+    Log.error("Mako is required. Install with: pip install mako")
+    sys.exit(1)
+
+try:
+    import yaml
+except ImportError:
+    Log.error("PyYAML is required. Install with: pip install pyyaml")
+    sys.exit(1)
+
+
+ENV_PREFIX = {
+    "oss": "OSS",
+    "vendor": "VENDOR",
+    "middleware": "MIDDLEWARE",
+    "application": "APPLICATION",
+    "image-assembler": "IMAGE_ASSEMBLER",
+}
+
+
+class RDKSetupError(Exception):
+    """Custom exception for RDK setup errors."""
+
+
+def load_config(config_path: Path, schema_path: Path) -> "dict[str, Any]":
+    """Load and validate configuration from YAML file."""
+    try:
+        if not config_path.exists():
+            raise RDKSetupError(f"Configuration file not found: {config_path}")
+
+        with open(config_path, "r", encoding="utf-8") as config_file:
+            config = yaml.safe_load(config_file)
+
+        if not config:
+            raise RDKSetupError("Configuration file is empty or invalid")
+
+        if not schema_path.exists():
+            raise RDKSetupError(f"Config schema file not found: {schema_path}")
+
+        with open(schema_path, "r", encoding="utf-8") as schema_file:
+            schema = yaml.safe_load(schema_file)
+
+        jsonschema.validate(instance=config, schema=schema)
+
+        return config
+
+    except yaml.YAMLError as yaml_error:
+        raise RDKSetupError(
+            f"Failed to parse YAML configuration: {yaml_error}"
+        ) from yaml_error
+    except Exception as error:
+        raise RDKSetupError(f"Failed to load configuration: {error}") from error
+
+
+def parse_layer_repos(layer_repos_str: str) -> "dict[str, str]":
+    """Parse layer repository types from CLI argument."""
+    layer_repos = {}
+    if layer_repos_str:
+        for item in layer_repos_str.split(','):
+            if ':' in item:
+                layer, repo_type = item.split(':', 1)
+                layer = layer.strip()
+                repo_type = repo_type.strip()
+                if layer in ENV_PREFIX and repo_type in ['local', 'remote']:
+                    layer_repos[layer] = repo_type
+                else:
+                    Log.warning(f"Invalid layer-repo specification: {item}")
+    return layer_repos
+
+
+def create_argument_parser() -> argparse.ArgumentParser:
+    """Create and configure argument parser."""
+    parser = argparse.ArgumentParser(
+        description="RDK Setup Script - Generate RDK build environment from YAML configuration",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog=f"""
+Examples:
+    {Path(__file__).name} -L oss
+    {Path(__file__).name} -L oss --config custom-config.yaml
+
+Dependencies:
+    pip install jsonschema mako pyyaml
+        """,
+    )
+
+    parser.add_argument(
+        "--config",
+        "-C",
+        default="config.yaml",
+        help="Path to YAML config file (default: config.yaml)",
+    )
+
+    parser.add_argument(
+        "--layer",
+        "-L",
+        help=f"Set layer to build {list(ENV_PREFIX.keys())} (required)",
+        required=True,
+    )
+
+    parser.add_argument(
+        "--branch",
+        "-b",
+        help="Set manifest branch or tag to use (e.g., develop, feature/*, hotfix/*, release/*, 4.9.0)",
+        required=True,
+    )
+
+    parser.add_argument(
+        "--layer-repos",
+        "-R",
+        help="Set IPK package repository type (local or remote) for each layer (format: oss:remote,vendor:local,...)",
+        default="",
+    )
+
+    parser.add_argument(
+        "--schema",
+        default="etc/config-schema.yaml",
+        help="Path to YAML schema for the config file (default: etc/config-schema.yaml)",
+    )
+
+    parser.add_argument(
+        "--template",
+        default="etc/build.env.mako",
+        help="Path to Mako template from which to generate output (default: etc/build.env.mako)",
+    )
+
+    parser.add_argument(
+        "--version", action="version", version="RDK Docker Build Setup Script 1.0.0"
+    )
+
+    return parser
+
+
+def main() -> None:
+    """Main entry point."""
+    parser = create_argument_parser()
+    args = parser.parse_args()
+
+    try:
+        Log.info(f"Generating build environment for {args.layer}")
+        config = load_config(Path(args.config), Path(args.schema))
+        Log.success(f"Configuration loaded from {args.config}")
+
+        # Parse layer repository types
+        layer_repos = parse_layer_repos(args.layer_repos)
+        
+        # Apply layer-specific repository settings to config
+        for layer_name in ENV_PREFIX:
+            if layer_name in layer_repos:
+                if layer_name not in config['layers']:
+                    config['layers'][layer_name] = {}
+                config['layers'][layer_name]['repository-type'] = layer_repos[layer_name]
+                Log.info(f"Setting {layer_name} IPK package source repository type to: {layer_repos[layer_name]}")
+            else:
+                # Set default if not specified
+                if 'repository-type' not in config['layers'][layer_name]:
+                    config['layers'][layer_name]['repository-type'] = config['repository']['type']
+
+        # Create ipk directory
+        # This must be done before the container is ever started
+        ipk_directory =  config['build']['ipk-dir']
+        dir_path = os.path.expandvars(ipk_directory)
+        os.makedirs(dir_path, exist_ok=True)
+
+        # Render the template
+        template = Template(filename=args.template)
+        build_env = template.render(
+            timestamp=datetime.now(timezone.utc),
+            target_layer=args.layer,
+            target_branch=args.branch,
+            env_prefix=ENV_PREFIX,
+            **config,
+        )
+        print(build_env)
+    except KeyboardInterrupt:
+        Log.warning("\nSetup interrupted by user")
+        sys.exit(130)
+    except Exception as error:
+        Log.error(f"Unexpected error: {error}")
+        sys.exit(1)
+
+
+if __name__ == "__main__":
+    main()
