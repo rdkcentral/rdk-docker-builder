@@ -215,10 +215,33 @@ setup() {
     print_info "Running RDK setup (outside container)..."
 
     # setup python venv
-    if [ ! -d .venv ]; then
-         # requires python3-venv
-         print_info "Creating python venv"
-         python3 -m venv .venv
+    if [ ! -f ".venv/bin/activate" ]; then
+        print_info "Creating Python virtual environment..."
+
+        # Clean up broken venv if it exists
+        if [ -d ".venv" ]; then
+            print_info "Removing broken virtual environment..."
+            rm -rf .venv
+        fi
+
+        # Ensure python3 exists
+        if ! command -v python3 >/dev/null 2>&1; then
+            print_info "python3 is not installed."
+            exit 1
+        fi
+
+        # Ensure venv module exists
+        if ! python3 -c "import venv" >/dev/null 2>&1; then
+            print_info "python3-venv is not installed. Run: apt install python3-venv."
+            exit 1
+        fi
+
+        # requires python3-venv
+        print_info "Creating python venv"
+        python3 -m venv .venv || {
+            print_error "Failed to create virtual environment."
+            exit 1
+        }
     fi
 
     # activate python venv
