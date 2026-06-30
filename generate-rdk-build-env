@@ -101,6 +101,7 @@ ENV_PREFIX = {
     "middleware": "MIDDLEWARE",
     "application": "APPLICATION",
     "image-assembler": "IMAGE_ASSEMBLER",
+    "bpi-r4-broadband": "BPI_R4_BROADBAND",
 }
 
 

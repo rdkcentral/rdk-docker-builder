@@ -114,8 +114,13 @@ get_layer_config() {
             package_name=
             image_name="lib32-rdk-fullstack-image"
             ;;
+        "bpi-r4-broadband")
+            manifest_dir="rdkb-manifest"
+            package_name=""
+            image_name="rdk-generic-broadband-image"
+                ;;
         *)
-            print_error "Unknown layer ${layer_name} . Supported layers: oss, vendor, middleware, application, image-assembler."
+            print_error "Unknown layer ${layer_name} . Supported layers: oss, vendor, middleware, application, image-assembler, bpi-r4-broadband."
 	    return 1
 	    ;;
     esac
@@ -414,6 +419,19 @@ build_layer() {
     # Return to the layer workdir before sourcing env
     local layer_dir="/home/rdk/workspace/${REPO_MANIFEST_REF}/${layer_name}-layer"
     cd "$layer_dir" || { print_error "Cannot cd to $layer_dir"; exit 1; }
+
+    # Handle Banana Pi builds
+    if [[ "$layer_name" == bpi-* ]]; then
+        print_info "Setting up RDK-B environment..."
+
+        MACHINE="$MACHINE" source meta-cmf-bananapi/setup-environment-refboard-rdkb "$BUILD_DIR"
+
+        print_info "Running build..."
+        bitbake "$image_name" || exit 1
+
+        print_success "$layer_name build completed!"
+        return 0
+    fi
 
     # Configure and build
     configure_ipk_feeds "$layer_name"
@@ -843,7 +861,7 @@ run_dependency() {
     print_info "Generating dependency graph for layer: $LAYER"
     
     case "$LAYER" in
-        "oss"|"vendor"|"middleware"|"application"|"image-assembler")
+        "oss"|"vendor"|"middleware"|"application"|"image-assembler"|"bpi-r4-broadband")
             generate_dependency_graph "$LAYER"
             ;;
         *)
@@ -864,7 +882,7 @@ run_sync() {
     print_info "Syncing RDK for layer: $LAYER"
     
     case "$LAYER" in
-        "oss"|"vendor"|"middleware"|"application"|"image-assembler")
+        "oss"|"vendor"|"middleware"|"application"|"image-assembler"|"bpi-r4-broadband")
             sync_layer "$LAYER"
             ;;
         *)
@@ -885,7 +903,7 @@ run_build() {
     print_info "Building RDK for layer: $LAYER"
     
     case "$LAYER" in
-        "oss"|"vendor"|"middleware"|"application"|"image-assembler")
+        "oss"|"vendor"|"middleware"|"application"|"image-assembler"|"bpi-r4-broadband")
             build_layer "$LAYER"
             ;;
         *)

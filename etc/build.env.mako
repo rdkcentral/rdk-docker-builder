@@ -45,8 +45,7 @@
 
         return ARM_MANIFEST
 
-    # Target/LAYER (env-first)
-    target_env = os.environ.get('TARGET', build['target'])
+    # LAYER (env-first)
     layer_env  = os.environ.get('LAYER', target_layer)
 
     # Branches (env-first)
@@ -94,6 +93,8 @@
         manifest_file_get = manifest_file_env
     elif layer_env == 'oss':
         manifest_file_get = get_oss_manifest(manifest_branch_env)
+    elif layer_env.startswith('bpi-'):
+        manifest_file_get = 'rdkb-bpi-extsrc.xml'
     else:
         manifest_file_get = manifest_defaults.get(layer_env)
 
@@ -116,6 +117,14 @@
     dac_appstore_url_user_input = os.environ.get('DAC_APPSTORE_URL_USER_INPUT', '')
     use_bolt_package = os.environ.get('USE_BOLT_PACKAGE', 'false')
 %>
+
+<%
+build_type = build.get('type', 'rdkv')
+active_build = rdkb if build_type == "rdkb" else build
+target_env = os.environ.get('TARGET', active_build['target'])
+%>
+
+export BUILD_TYPE="${build_type}"
 
 # Target configuration
 export TARGET="${target_env}"
@@ -179,6 +188,7 @@ export ${env_prefix[layer_name]}_DIR="${build['workspace-dir']}/${REPO_MANIFEST_
 
 # IPK feed paths (uses container paths)
 % for layer_name, layer in layers.items():
+% if not layer_name.startswith("bpi-"):
 % if layer_name == 'oss':
 export ${env_prefix[layer_name]}_IPK_PATH="${build['ipk-dir']}/${build['machine']['arch']}-${layer_name}/${oss_ipk_env}/ipk"
 % elif layer_name == 'vendor':
@@ -191,6 +201,7 @@ export ${env_prefix[layer_name]}_OSS_IPK_PATH="${build['ipk-dir']}/${build['oss-
 export ${env_prefix[layer_name]}_IPK_PATH="${build['ipk-dir']}/${build['machine']['model']}-${layer_name}/${application_ipk_env}/ipk"
 export ${env_prefix[layer_name]}_OSS_IPK_PATH="${build['ipk-dir']}/${build['oss-ipk-dir']}-${layer_name}/${build['machine']['model']}-${layer_name}/${application_ipk_env}/ipk"
 % endif
+% endif
 % endfor
 
 # Repository configuration
@@ -199,7 +210,7 @@ export REPO_BASE_URL="${repository['base-url']}"
 
 # Layer-specific repository types
 % for layer_name, layer in layers.items():
-% if layer_name != 'image-assembler':
+% if not layer_name.startswith("bpi-") and layer_name != 'image-assembler':
 <% repo_type = layer.get('repository-type', repository['type']) %>
 export ${env_prefix[layer_name]}_REPO_TYPE="${repo_type}"
 % endif
@@ -207,18 +218,22 @@ export ${env_prefix[layer_name]}_REPO_TYPE="${repo_type}"
 
 # IPK server URLs (remote paths matching local structure)
 % for layer_name, layer in layers.items():
+% if not layer_name.startswith("bpi-"):
 % if layer_name == 'oss':
 export ${env_prefix[layer_name]}_IPK_SERVER_URL="${repository['base-url']}/${build['machine']['arch']}-${layer_name}/${build['branch']['oss']}/ipk"
 % elif layer_name != 'image-assembler':
 export ${env_prefix[layer_name]}_IPK_SERVER_URL="${repository['base-url']}/${build['machine']['model']}-${layer_name}/${build['branch']['manifest']}/ipk"
 % endif
+% endif
 % endfor
 
 # Build setup (uses container paths)
-% if target_layer == 'oss':
-export MACHINE="${build['machine']['arch']}"
+% if build_type == "rdkb":
+export MACHINE="${active_build['machine']['model']}"
+% elif target_layer == 'oss':
+export MACHINE="${active_build['machine']['arch']}"
 % else:
-export MACHINE="${build['machine']['model']}"
+export MACHINE="${active_build['machine']['model']}"
 % endif
 export BUILD_COMMAND="${layers[target_layer]['build-command']}"
 export BUILD_DIR="build-$MACHINE"
@@ -238,6 +253,7 @@ export ${env_prefix[layer_name]}_MANIFEST_URL="${url.scheme}://${url.netloc}${pa
 export ${env_prefix[layer_name]}_MANIFEST_FILE="${path.name}"
 % endfor
 
+
 % if os.environ.get('GEN_BOLT_PACKAGES', 'false') != 'true':
 echo "RDK build environment loaded for $TARGET/$LAYER"
 echo "Work directory: $WORK_DIR"
@@ -245,10 +261,12 @@ echo "Build directory: $BUILDDIR"
 echo "Machine: $MACHINE"
 echo "Build command: $BUILD_COMMAND"
 echo ""
+% if not layer_env.startswith('bpi-'):
 echo "Repository configuration:"
 % for layer_name in ['oss', 'vendor', 'middleware', 'application']:
 % if layer_name in layers:
 echo "  ${layer_name}: $(eval echo \$${env_prefix[layer_name]}_REPO_TYPE)"
 % endif
 % endfor
+% endif
 % endif

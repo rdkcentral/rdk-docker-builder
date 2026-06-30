@@ -20,6 +20,8 @@
 
 # Build settings
 build:
+  type: "rdkb"
+
   target: "raspberrypi"
 
   branch:
@@ -33,6 +35,16 @@ build:
   ipk-dir: "${HOME}/ipks"
   workspace-dir: "/home/rdk/workspace"
   oss-ipk-dir: "rdk-arm64-oss"
+
+rdkb:
+  target: "bananapi"
+
+  branch:
+    manifest: "rdk8-1.0.0"
+
+  machine:
+    model: "bananapi4-rdk-broadband"
+
 # Repository configuration
 repository:
   base-url: "https://repo.solution57.com"
@@ -59,3 +71,7 @@ layers:
   image-assembler:
     build-command: "bitbake lib32-rdk-fullstack-image"
     manifest: "https://github.com/rdkcentral/image-assembler-manifest-rdke/raspberrypi4-64.xml"
+
+  bpi-r4-broadband:
+    build-command: "bitbake rdk-generic-broadband-image"
+    manifest: "https://code.rdkcentral.com/r/rdkcmf/manifests/rdkb-bpi-extsrc.xml"

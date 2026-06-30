@@ -30,7 +30,7 @@ RUN apt-get update && apt-get install -y \
     libreadline-dev libsasl2-dev libsqlite3-dev libslang2-dev libssl-dev libxml2-dev \
     libxmlsec1-dev zlib1g-dev ant nnn locales \
     cpio gawk lz4 rsync \
-    vim \
+    vim git-lfs \
     python-is-python3 \
     && rm -rf /var/lib/apt/lists/*
 
