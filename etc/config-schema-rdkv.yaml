@@ -9,7 +9,7 @@ properties:
       - "target"
       - "branch"
       - "machine"
-      - "ipk-dir"
+        #  - "ipk-dir"
       - "workspace-dir"
     additionalproperties: true
     properties:
@@ -68,8 +68,8 @@ properties:
 
 required:
   - "build"
-  - "repository"
-  - "layers"
+    #  - "repository"
+    #- "layers"
 
 additionalproperties: false
 

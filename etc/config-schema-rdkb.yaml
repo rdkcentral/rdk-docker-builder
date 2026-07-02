@@ -1,0 +1,99 @@
+$schema: "http://json-schema.org/draft-07/schema#"
+title: "RDK-B build configuration"
+
+type: object
+
+properties:
+  build:
+    type: object
+    required:
+      - target
+      - branch
+      - machine
+      - workspace-dir
+    additionalProperties: false
+
+    properties:
+      target:
+        type: string
+        minLength: 1
+
+      branch:
+        $ref: "#/definitions/branch"
+
+      machine:
+        $ref: "#/definitions/machine"
+
+      workspace-dir:
+        type: string
+        minLength: 1
+
+  build-targets:
+    type: object
+    minProperties: 1
+    additionalProperties:
+      $ref: "#/definitions/build-target"
+
+required:
+  - build
+  - build-targets
+
+additionalProperties: false
+
+definitions:
+  branch:
+    type: object
+    properties:
+      manifest:
+        type: string
+        minLength: 1
+
+    required:
+      - manifest
+
+    additionalProperties: false
+
+  machine:
+    type: object
+    properties:
+      model:
+        type: string
+        minLength: 1
+
+      extender:
+        type: string
+        minLength: 1
+
+    required:
+      - model
+
+    additionalProperties: false
+
+  build-target:
+    type: object
+    properties:
+      build-command:
+        type: string
+        minLength: 1
+        description: "BitBake command for the target"
+
+      manifest:
+        type: string
+        minLength: 1
+        description: "Manifest URL for the target"
+
+      machine:
+        type: object
+        properties:
+          model:
+            type: string
+            minLength: 1
+        required:
+          - model
+        additionalProperties: false
+
+    required:
+      - build-command
+      - manifest
+
+    additionalProperties: false
