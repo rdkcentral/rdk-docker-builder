@@ -123,9 +123,9 @@ get_rdkv_layer_config() {
 
 # Get build target configuration details
 get_rdkb_target_config() {
-    local target_name=$1
+    local build_target=$1
 
-    local target_prefix=${target_name//-/_}
+    local target_prefix=${build_target//-/_}
     target_prefix=${target_prefix^^}
 
     manifest_url_var="${target_prefix}_MANIFEST_URL"
@@ -137,7 +137,7 @@ get_rdkb_target_config() {
     manifest_dir="rdkb-manifest"
 
     # Build-target specific defaults and branch variable mapping
-    case "$target_name" in
+    case "$build_target" in
         bpi-r4-broadband)
             ;;
         bpi-r4-easymesh-controller)
@@ -148,7 +148,7 @@ get_rdkb_target_config() {
         bpi-r4-broadband-wifiagent)
             ;;
         *)
-            print_error "Unknown build target $target_name"
+            print_error "Unknown build target $build_target"
             return 1
             ;;
     esac
@@ -215,12 +215,12 @@ init_or_sync() {
     revision="$(resolve_git_revision "${repo_url}" "${ref}")"
 
     # --- Determine init vs sync ---
-    if [ "${PRODUCT}" = "rdkv" ]; then
+    if [ "${PROFILE}" = "rdkv" ]; then
         local repo_dir="$layer_dir/.repo"
-    elif [ "${PRODUCT}" = "rdkb" ]; then
+    elif [ "${PROFILE}" = "rdkb" ]; then
         local repo_dir="$build_target_dir/.repo"
     else
-        print_error "Unsupported PRODUCT: ${PRODUCT}"
+        print_error "Unsupported PROFILE: ${PROFILE}"
         exit 1
     fi
     local existing_dir=""
@@ -231,12 +231,12 @@ init_or_sync() {
     fi
 
     # --- Build Configuration Logging ---
-    if [ "${PRODUCT}" = "rdkv" ]; then
+    if [ "${PROFILE}" = "rdkv" ]; then
         echo "[INFO] Layer: ${layer_name}"
-    elif [ "${PRODUCT}" = "rdkb" ]; then
+    elif [ "${PROFILE}" = "rdkb" ]; then
         echo "[INFO] Build Target: ${build_target}"
     else
-        print_error "Unsupported PRODUCT: ${PRODUCT}"
+        print_error "Unsupported PROFILE: ${PROFILE}"
         exit 1
     fi
     echo "  branch_var=${branch_var} → ${!branch_var}"
@@ -276,7 +276,7 @@ init_or_sync_layer() {
     # Load per-layer config (must set branch_var, manifest_dir, manifest_url_var, manifest_file_var, etc.)
     get_rdkv_layer_config "$layer_name"
 
-    local layer_dir="/home/rdk/workspace/${REPO_MANIFEST_REF}/${layer_name}-layer"
+    local layer_dir="/home/rdk/workspace/video/${REPO_MANIFEST_REF}/${layer_name}-layer"
     echo "layer_dir: $layer_dir"
     mkdir -p "$layer_dir" && cd "$layer_dir"
     init_or_sync
@@ -289,7 +289,7 @@ init_or_sync_target() {
     # Load build target config (must set branch_var, manifest_dir, manifest_url_var, manifest_file_var, etc.)
     get_rdkb_target_config "$build_target"
 
-    local build_target_dir="/home/rdk/workspace/${REPO_MANIFEST_REF}/${build_target}"
+    local build_target_dir="/home/rdk/workspace/broadband/${REPO_MANIFEST_REF}/${build_target}"
 
     echo "build_target_dir: $build_target_dir"
     mkdir -p "$build_target_dir" && cd "$build_target_dir"
@@ -435,7 +435,7 @@ build_bolt_package() {
 }
 
 include_bolt_package_from_url() {
-    DOWNLOAD_DIR="${HOME}/workspace/${REPO_MANIFEST_REF}/${LAYER}-layer/downloads"
+    DOWNLOAD_DIR="${HOME}/workspace/video/${REPO_MANIFEST_REF}/${LAYER}-layer/downloads"
     JSON_LOCAL_PATH="${DOWNLOAD_DIR}/factory_app_version.json"
 
     # Ensure download directory exists
@@ -475,7 +475,7 @@ build_layer() {
     init_or_sync_layer "$layer_name"
 
     # Return to the layer workdir before sourcing env
-    local layer_dir="/home/rdk/workspace/${REPO_MANIFEST_REF}/${layer_name}-layer"
+    local layer_dir="/home/rdk/workspace/video/${REPO_MANIFEST_REF}/${layer_name}-layer"
     cd "$layer_dir" || { print_error "Cannot cd to $layer_dir"; exit 1; }
 
     # Configure and build
@@ -604,7 +604,7 @@ build_target(){
     init_or_sync_target "$build_target"
 
     # Return to the build target workdir before sourcing env
-    local build_target_dir="/home/rdk/workspace/${REPO_MANIFEST_REF}/${build_target}"
+    local build_target_dir="/home/rdk/workspace/broadband/${REPO_MANIFEST_REF}/${build_target}"
 
     cd "$build_target_dir" || { print_error "Cannot cd to $build_target_dir"; exit 1; }
 
@@ -621,11 +621,13 @@ build_target(){
             MACHINE="$MACHINE" source meta-cmf-bananapi/setup-environment-refboard-rdkb "$BUILD_DIR"
             ;;
         bpi-r4-broadband-wifiagent)
-            sed -i \
-                's/^DISTRO_FEATURES_append = " OneWifi onewifi_integration"/#DISTRO_FEATURES_append = " OneWifi onewifi_integration"/' \
-                meta-cmf-bananapi/conf/distro/include/rdk-bpi.inc
-
             MACHINE="$MACHINE" source meta-cmf-bananapi/setup-environment-refboard-rdkb "$BUILD_DIR"
+
+            cat >> conf/local.conf <<EOF
+# Remove OneWifi feature to enable CcspWifiAgent
+DISTRO_FEATURES_remove = "OneWifi"
+DISTRO_FEATURES_remove = "onewifi_integration"
+EOF
             ;;
         *)
             print_error "Unsupported build target: ${build_target}"
@@ -909,33 +911,7 @@ sync_target() {
 }
 
 generate_dependency_graph() {
-    local layer_name=$1
-    local layer_prefix=${1//-/_}
-    layer_prefix=${layer_prefix^^}
-
-    local image_name="lib32-${layer_name}-test-image"
-    
-    # Handle special cases
-    case "$layer_name" in
-        "oss")
-              image_name="core-image-minimal"
-              ;;
-        "image-assembler")
-            local image_name="lib32-rdk-fullstack-image"
-            ;;
-    esac
-    
-    print_info "Generating dependency graph for $layer_name layer..."
-    
-    # Setup directory and environment
-    local layer_dir="/home/rdk/workspace/${REPO_MANIFEST_REF}/${layer_name}-layer"
-    cd "$layer_dir"
-    
-    print_info "Setting up $layer_name build environment..."
-    MACHINE="$MACHINE" source ./scripts/setup-environment $BUILD_DIR
-    
-    print_info "Generating dependency graph for $image_name..."
-    case "${PRODUCT}" in
+    case "${PROFILE}" in
         rdkv)
             local layer_name=$1
             local layer_prefix=${1//-/_}
@@ -956,7 +932,7 @@ generate_dependency_graph() {
             print_info "Generating dependency graph for $layer_name layer..."
             
             # Setup directory and environment
-            local layer_dir="/home/rdk/workspace/${REPO_MANIFEST_REF}/${layer_name}-layer"
+            local layer_dir="/home/rdk/workspace/video/${REPO_MANIFEST_REF}/${layer_name}-layer"
             cd "$layer_dir"
             
             print_info "Setting up $layer_name build environment..."
@@ -964,24 +940,23 @@ generate_dependency_graph() {
             ;;
 
         rdkb)
-            local target_name=$1
-	        
-            local target_prefix=${target_name//-/_}
+            local build_target=$1
+        
+            local target_prefix=${build_target//-/_}
             target_prefix=${target_prefix^^}
-	        
-	        local image_name="rdk-generic-broadband-image"
-	        
-            # Handle special cases
-            case "$target_name" in
-                "bpi-r4-easymesh-extender")
-                      image_name="rdk-generic-ap-extender-image"
-                      ;;
+        
+            local image_name="rdk-generic-broadband-image"
+        
+            case "$build_target" in
+                bpi-r4-easymesh-extender)
+                    image_name="rdk-generic-ap-extender-image"
+                    ;;
             esac
-	        
-            print_info "Generating dependency graph for $target_name ..."
+        
+            print_info "Generating dependency graph for $build_target ..."
 	        
 	        # Setup directory and environment
-	        local build_target_dir="/home/rdk/workspace/${REPO_MANIFEST_REF}/${build_target}"
+	        local build_target_dir="/home/rdk/workspace/broadband/${REPO_MANIFEST_REF}/${build_target}"
 	        cd "$build_target_dir"
 	        
             print_info "Setting up ${build_target} build environment..."
@@ -997,11 +972,13 @@ generate_dependency_graph() {
                     MACHINE="$MACHINE" source meta-cmf-bananapi/setup-environment-refboard-rdkb "$BUILD_DIR"
                     ;;
                 bpi-r4-broadband-wifiagent)
-                    sed -i \
-                        's/^DISTRO_FEATURES_append = " OneWifi onewifi_integration"/#DISTRO_FEATURES_append = " OneWifi onewifi_integration"/' \
-                        meta-cmf-bananapi/conf/distro/include/rdk-bpi.inc
-
                     MACHINE="$MACHINE" source meta-cmf-bananapi/setup-environment-refboard-rdkb "$BUILD_DIR"
+
+                    cat >> conf/local.conf <<EOF
+# Remove OneWifi feature to enable CcspWifiAgent
+DISTRO_FEATURES_remove = "OneWifi"
+DISTRO_FEATURES_remove = "onewifi_integration"
+EOF
                     ;;
                 *)
                     print_error "Unsupported build target: ${build_target}"
@@ -1043,7 +1020,7 @@ run_dependency() {
     print_info "Sourcing build environment..."
     source /home/rdk/workspace/build.env
     
-    case "${PRODUCT}" in
+    case "${PROFILE}" in
         rdkv)
             print_info "Generating dependency graph for layer: $LAYER"
             case "$LAYER" in
@@ -1069,7 +1046,7 @@ run_dependency() {
             esac
             ;;
         *)
-            print_error "Unsupported PRODUCT: ${PRODUCT}"
+            print_error "Unsupported PROFILE: ${PROFILE}"
             exit 1
             ;;
     esac
@@ -1084,7 +1061,7 @@ run_sync() {
     print_info "Sourcing build environment..."
     source /home/rdk/workspace/build.env
     
-    case "${PRODUCT}" in
+    case "${PROFILE}" in
         rdkv)
             print_info "Syncing RDK for layer: $LAYER"
             case "$LAYER" in
@@ -1110,7 +1087,7 @@ run_sync() {
             esac
             ;;
         *)
-            print_error "Unsupported PRODUCT: ${PRODUCT}"
+            print_error "Unsupported PROFILE: ${PROFILE}"
             exit 1
             ;;
     esac
@@ -1125,7 +1102,7 @@ run_build() {
     print_info "Sourcing build environment..."
     source /home/rdk/workspace/build.env
     
-    case "${PRODUCT}" in
+    case "${PROFILE}" in
         rdkv)
             print_info "Building RDK for layer: $LAYER"
             case "$LAYER" in
@@ -1153,7 +1130,7 @@ run_build() {
             print_success "RDK build completed for build target: $BUILD_TARGET"
             ;;
         *)
-            print_error "Unsupported PRODUCT: ${PRODUCT}"
+            print_error "Unsupported PROFILE: ${PROFILE}"
             exit 1
             ;;
     esac

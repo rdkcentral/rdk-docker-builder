@@ -46,6 +46,7 @@
         return ARM_MANIFEST
 
     # Target/LAYER (env-first)
+    profile_env = os.environ.get("PROFILE", profile)
     target_env = os.environ.get('TARGET', build['target'])
     layer_env  = os.environ.get('LAYER', target_layer)
 
@@ -118,6 +119,7 @@
 %>
 
 # Target configuration
+export PROFILE="${profile_env}"
 export TARGET="${target_env}"
 export LAYER="${layer_env}"
 export IPK_DIR="${build['ipk-dir']}"
@@ -174,7 +176,7 @@ export NON_OSS_IPK_LAYER="${build['machine']['model']}"
 
 # Layer directories (uses container paths)
 % for layer_name, layer in layers.items():
-export ${env_prefix[layer_name]}_DIR="${build['workspace-dir']}/${REPO_MANIFEST_REF}/${layer_name}-layer"
+export ${env_prefix[layer_name]}_DIR="${build['workspace-dir']}/video/${REPO_MANIFEST_REF}/${layer_name}-layer"
 % endfor
 
 # IPK feed paths (uses container paths)

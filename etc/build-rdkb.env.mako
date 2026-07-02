@@ -22,6 +22,7 @@
     import os
     import re
 
+    profile_env = os.environ.get("PROFILE", profile)
     target_env = os.environ.get("TARGET", build["target"])
     build_target_env = os.environ.get("BUILD_TARGET", build_target)
 
@@ -43,7 +44,7 @@
 %>
 
 # Target configuration
-export PRODUCT="rdkb"
+export PROFILE="${profile_env}"
 export TARGET="${target_env}"
 export BUILD_TARGET="${build_target_env}"
 
@@ -60,15 +61,15 @@ REPO_MANIFEST_REF = manifest_branch_env.replace('refs/tags/', '').replace('/', '
 export REPO_MANIFEST_REF="${REPO_MANIFEST_REF}"
 
 # Build setup
-% if build_target == 'bpi-r4-easymesh-extender':
+% if build_target_env == 'bpi-r4-easymesh-extender':
 export MACHINE="${build['machine']['extender']}"
 % else:
 export MACHINE="${build['machine']['model']}"
 % endif
 
-export BUILD_COMMAND="${build_targets[build_target]['build-command']}"
+export BUILD_COMMAND="${build_targets[build_target_env]['build-command']}"
 export BUILD_DIR="build-$MACHINE"
-export WORK_DIR="$${env_prefix[build_target]}_DIR"
+export WORK_DIR="$${env_prefix[build_target_env]}_DIR"
 
 # Manifest URLs and files
 <%
@@ -91,4 +92,3 @@ echo "Build Target   : $BUILD_TARGET"
 echo "Manifest Branch: $REPO_MANIFEST_BRANCH"
 echo "Machine        : $MACHINE"
 echo "Build Command  : $BUILD_COMMAND"
-echo "Work Directory : $WORK_DIR"

@@ -24,14 +24,14 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m'
 
-DEFAULT_PRODUCT="rdkv"
+DEFAULT_PROFILE="rdkv"
 DEFAULT_BUILD_TARGET="bpi-r4-broadband"
 DEFAULT_TARGET="raspberrypi"
 DEFAULT_LAYER="vendor"
 DEFAULT_BRANCH="develop"
 IMAGE_NAME="rdk-layer-builder"
 CONTAINER_NAME="${CONTAINER_NAME:-rdk-layer-builder}"
-PRODUCT="$DEFAULT_PRODUCT"
+PROFILE="$DEFAULT_PROFILE"
 
 # CLI variables
 LAYER=""
@@ -87,7 +87,7 @@ Commands:
     help              Show this help
 
 Options:
-    -P, --product PRODUCT            Product type (rdkv|rdkb)
+    -p, --profile PROFILE            Profile type (rdkv|rdkb)
     -b, --branch BRANCH              Manifest branch or tag
 
 RDK-V Options:
@@ -306,7 +306,7 @@ setup_rdkv() {
     fi
 
     # Generate build.env
-    eval "./generate-rdk-build-env --product rdkv --layer $LAYER --branch "$REPO_MANIFEST_BRANCH" $layer_repos_arg > build.env"
+    eval "./generate-rdk-build-env --profile rdkv --layer $LAYER --branch "$REPO_MANIFEST_BRANCH" $layer_repos_arg > build.env"
 
     print_success "Setup completed for RDK-V layer: $LAYER"
 }
@@ -324,7 +324,7 @@ setup_rdkb() {
         get_input "Enter branch to build (rdk8-1.0.0, feature, hotfix, tags)" "rdk8-1.0.0" "REPO_MANIFEST_BRANCH"
     fi
 
-    eval "./generate-rdk-build-env --product rdkb --build-target $BUILD_TARGET --branch "$REPO_MANIFEST_BRANCH"  > build.env"
+    eval "./generate-rdk-build-env --profile rdkb --build-target $BUILD_TARGET --branch "$REPO_MANIFEST_BRANCH"  > build.env"
 
     print_success "Setup completed for RDK-B target: $BUILD_TARGET"
 }
@@ -366,7 +366,7 @@ setup() {
     . .venv/bin/activate
     python_setup
 
-    case "$PRODUCT" in
+    case "$PROFILE" in
         rdkv)
             setup_rdkv
             ;;
@@ -374,7 +374,7 @@ setup() {
             setup_rdkb
             ;;
         *)
-            print_error "Unsupported platform: $PRODUCT"
+            print_error "Unsupported platform: $PROFILE"
             deactivate
             exit 1
             ;;
@@ -430,8 +430,8 @@ docker_run_command() {
         -e REPO_MANIFEST_BRANCH="${REPO_MANIFEST_BRANCH:-}" \
         -e MANIFEST_FILE="${MANIFEST_FILE:-}" \
         -e LAYER="${LAYER:-}" \
-	-e PRODUCT="${PRODUCT:-}" \
-	-e BUILD_TARGET="${BUILD_TARGET:-}" \
+        -e PROFILE="${PROFILE:-}" \
+        -e BUILD_TARGET="${BUILD_TARGET:-}" \
         --platform linux/amd64 \
         "$IMAGE_NAME" "$command"
 }
@@ -473,10 +473,10 @@ while [[ $# -gt 0 ]]; do
             COMMAND="$1"
             shift
             ;;
-        -p|--product)
-	    PRODUCT="$2"
-	    shift 2
-	    ;;	    
+        -p|--profile)
+            PROFILE="$2"
+            shift 2
+            ;;
         -l|--layer)
             LAYER="$2"
             shift 2

@@ -175,11 +175,11 @@ Dependencies:
     )
 
     parser.add_argument(
-        "--product",
+        "--profile",
         "-p",
         choices=["rdkv", "rdkb"],
         default="rdkv",
-        help="Target product (default: rdkv)",
+        help="Target profile (default: rdkv)",
     )
 
     parser.add_argument(
@@ -192,7 +192,6 @@ Dependencies:
         "--layer",
         "-L",
         help=f"Set layer to build {list(RDKV_ENV_PREFIX.keys())} (required)",
-        #required=True,
     )
 
     parser.add_argument(
@@ -217,7 +216,7 @@ Dependencies:
 
     parser.add_argument(
         "--schema",
-        help="Path to YAML schema for the config file (default: etc/config-schema.yaml)",
+        help="Path to YAML schema for the config file (default: etc/config-schema-rdkv.yaml)",
     )
 
     parser.add_argument(
@@ -262,6 +261,7 @@ def generate_rdkv_build_env(args, config):
 
     build_env = template.render(
         timestamp=datetime.now(timezone.utc),
+        profile=args.profile,
         target_layer=args.layer,
         target_branch=args.branch,
         env_prefix=RDKV_ENV_PREFIX,
@@ -284,6 +284,7 @@ def generate_rdkb_build_env(args, config):
 
     build_env = template.render(
         timestamp=datetime.now(timezone.utc),
+        profile=args.profile,
         build_target=args.build_target,
         target_branch=args.branch,
         build_targets=config["build-targets"],
@@ -298,7 +299,7 @@ def main() -> None:
     parser = create_argument_parser()
     args = parser.parse_args()
 
-    product_defaults = {
+    profile_defaults = {
         "rdkv": {
             "config": "config-rdkv.yaml",
             "schema": "etc/config-schema-rdkv.yaml",
@@ -311,18 +312,24 @@ def main() -> None:
         },
     }
 
-    args.config = args.config or product_defaults[args.product]["config"]
-    args.template = args.template or product_defaults[args.product]["template"]
-    args.schema = args.schema or product_defaults[args.product]["schema"]
+    args.config = args.config or profile_defaults[args.profile]["config"]
+    args.template = args.template or profile_defaults[args.profile]["template"]
+    args.schema = args.schema or profile_defaults[args.profile]["schema"]
 
     try:
         config = load_config(Path(args.config), Path(args.schema))
         Log.success(f"Configuration loaded from {args.config}")
 
-        if args.product == "rdkv":
+        if args.profile == "rdkv":
+            if not args.layer:
+                parser.error("--layer/-L is required for profile 'rdkv'")
             generate_rdkv_build_env(args, config)
-        elif args.product == "rdkb":
+        elif args.profile == "rdkb":
+            if not args.build_target:
+                parser.error("--build-target/-t is required for profile 'rdkb'")
             generate_rdkb_build_env(args, config)
+        else:
+            parser.error(f"Unknown profile: {args.profile}")
 
     except KeyboardInterrupt:
         Log.warning("\nSetup interrupted by user")

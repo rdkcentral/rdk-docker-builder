@@ -40,7 +40,7 @@ build-targets:
     build-command: "bitbake rdk-generic-broadband-image"
     manifest: "https://code.rdkcentral.com/r/rdkcmf/manifests/rdkb-bpi-extsrc.xml"
   bpi-r4-easymesh-extender:
-    build-command: "bitbake rdk-generic-broadband-image"
+    build-command: "bitbake rdk-generic-ap-extender-image"
     manifest: "https://code.rdkcentral.com/r/rdkcmf/manifests/rdkb-bpi-ap-extsrc.xml"
   bpi-r4-broadband-wifiagent:
     build-command: "bitbake rdk-generic-broadband-image"
