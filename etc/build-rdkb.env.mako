@@ -24,6 +24,7 @@
 
     target_env = os.environ.get("TARGET", build["target"])
     build_target_env = os.environ.get("BUILD_TARGET", build_target)
+    product_env = os.environ.get("PRODUCT", product)
 
     manifest_branch_env = os.environ.get("REPO_MANIFEST_BRANCH", target_branch)
 
@@ -43,7 +44,7 @@
 %>
 
 # Target configuration
-export PRODUCT="rdkb"
+export PRODUCT="${product_env}"
 export TARGET="${target_env}"
 export BUILD_TARGET="${build_target_env}"
 

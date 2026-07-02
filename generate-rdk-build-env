@@ -192,7 +192,6 @@ Dependencies:
         "--layer",
         "-L",
         help=f"Set layer to build {list(RDKV_ENV_PREFIX.keys())} (required)",
-        #required=True,
     )
 
     parser.add_argument(
@@ -217,7 +216,7 @@ Dependencies:
 
     parser.add_argument(
         "--schema",
-        help="Path to YAML schema for the config file (default: etc/config-schema.yaml)",
+        help="Path to YAML schema for the config file (default: etc/config-schema-rdkv.yaml)",
     )
 
     parser.add_argument(
@@ -262,6 +261,7 @@ def generate_rdkv_build_env(args, config):
 
     build_env = template.render(
         timestamp=datetime.now(timezone.utc),
+        product=args.product,
         target_layer=args.layer,
         target_branch=args.branch,
         env_prefix=RDKV_ENV_PREFIX,
@@ -284,6 +284,7 @@ def generate_rdkb_build_env(args, config):
 
     build_env = template.render(
         timestamp=datetime.now(timezone.utc),
+        product=args.product,
         build_target=args.build_target,
         target_branch=args.branch,
         build_targets=config["build-targets"],
