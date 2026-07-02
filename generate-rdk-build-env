@@ -94,8 +94,7 @@ except ImportError:
     Log.error("PyYAML is required. Install with: pip install pyyaml")
     sys.exit(1)
 
-
-ENV_PREFIX = {
+RDKV_ENV_PREFIX = {
     "oss": "OSS",
     "vendor": "VENDOR",
     "middleware": "MIDDLEWARE",
@@ -103,6 +102,12 @@ ENV_PREFIX = {
     "image-assembler": "IMAGE_ASSEMBLER",
 }
 
+RDKB_ENV_PREFIX = {
+    "bpi-r4-broadband": "BPI_R4_BROADBAND",
+    "bpi-r4-easymesh-controller": "BPI_R4_EASYMESH_CONTROLLER",
+    "bpi-r4-easymesh-extender": "BPI_R4_EASYMESH_EXTENDER",
+    "bpi-r4-broadband-wifiagent": "BPI_R4_BROADBAND_WIFIAGENT",
+}
 
 class RDKSetupError(Exception):
     """Custom exception for RDK setup errors."""
@@ -147,7 +152,7 @@ def parse_layer_repos(layer_repos_str: str) -> "dict[str, str]":
                 layer, repo_type = item.split(':', 1)
                 layer = layer.strip()
                 repo_type = repo_type.strip()
-                if layer in ENV_PREFIX and repo_type in ['local', 'remote']:
+                if layer in RDKV_ENV_PREFIX and repo_type in ['local', 'remote']:
                     layer_repos[layer] = repo_type
                 else:
                     Log.warning(f"Invalid layer-repo specification: {item}")
@@ -170,19 +175,31 @@ Dependencies:
     )
 
     parser.add_argument(
+        "--product",
+        "-p",
+        choices=["rdkv", "rdkb"],
+        default="rdkv",
+        help="Target product (default: rdkv)",
+    )
+
+    parser.add_argument(
         "--config",
         "-C",
-        default="config.yaml",
-        help="Path to YAML config file (default: config.yaml)",
+        help="Path to YAML config file (default: config-rdkv.yaml)",
     )
 
     parser.add_argument(
         "--layer",
         "-L",
-        help=f"Set layer to build {list(ENV_PREFIX.keys())} (required)",
-        required=True,
+        help=f"Set layer to build {list(RDKV_ENV_PREFIX.keys())} (required)",
     )
 
+    parser.add_argument(
+        "--build-target",
+        "-t",
+        help=f"Set build target to build {list(RDKB_ENV_PREFIX.keys())} (required)",
+    )
+    
     parser.add_argument(
         "--branch",
         "-b",
@@ -199,14 +216,12 @@ Dependencies:
 
     parser.add_argument(
         "--schema",
-        default="etc/config-schema.yaml",
-        help="Path to YAML schema for the config file (default: etc/config-schema.yaml)",
+        help="Path to YAML schema for the config file (default: etc/config-schema-rdkv.yaml)",
     )
 
     parser.add_argument(
         "--template",
-        default="etc/build.env.mako",
-        help="Path to Mako template from which to generate output (default: etc/build.env.mako)",
+        help="Path to Mako template from which to generate output (default: etc/build-rdkv.env.mako)",
     )
 
     parser.add_argument(
@@ -215,55 +230,108 @@ Dependencies:
 
     return parser
 
+def generate_rdkv_build_env(args, config):
+    Log.info(f"Generating build environment for {args.layer}")
+
+    layer_repos = parse_layer_repos(args.layer_repos)
+
+    for layer_name in RDKV_ENV_PREFIX:
+        if layer_name in layer_repos:
+            if layer_name not in config["layers"]:
+                config["layers"][layer_name] = {}
+
+            config["layers"][layer_name]["repository-type"] = (
+                layer_repos[layer_name]
+            )
+
+            Log.info(
+                f"Setting {layer_name} IPK package source repository "
+                f"type to: {layer_repos[layer_name]}"
+            )
+        else:
+            if "repository-type" not in config["layers"][layer_name]:
+                config["layers"][layer_name]["repository-type"] = (
+                    config["repository"]["type"]
+                )
+
+    ipk_directory = config["build"]["ipk-dir"]
+    os.makedirs(os.path.expandvars(ipk_directory), exist_ok=True)
+
+    template = Template(filename=args.template)
+
+    build_env = template.render(
+        timestamp=datetime.now(timezone.utc),
+        product=args.product,
+        target_layer=args.layer,
+        target_branch=args.branch,
+        env_prefix=RDKV_ENV_PREFIX,
+        **config,
+    )
+
+    print(build_env)
+
+def generate_rdkb_build_env(args, config):
+    Log.info(
+        f"Generating build environment for {args.build_target}"
+    )
+
+    if args.build_target not in config["build-targets"]:
+        raise RDKSetupError(
+            f"Unknown build target: {args.build_target}"
+        )
+
+    template = Template(filename=args.template)
+
+    build_env = template.render(
+        timestamp=datetime.now(timezone.utc),
+        product=args.product,
+        build_target=args.build_target,
+        target_branch=args.branch,
+        build_targets=config["build-targets"],
+        env_prefix=RDKB_ENV_PREFIX,
+        **config,
+    )
+
+    print(build_env)
 
 def main() -> None:
     """Main entry point."""
     parser = create_argument_parser()
     args = parser.parse_args()
 
+    product_defaults = {
+        "rdkv": {
+            "config": "config-rdkv.yaml",
+            "schema": "etc/config-schema-rdkv.yaml",
+            "template": "etc/build-rdkv.env.mako",
+        },
+        "rdkb": {
+            "config": "config-rdkb.yaml",
+            "schema": "etc/config-schema-rdkb.yaml",
+            "template": "etc/build-rdkb.env.mako",
+        },
+    }
+
+    args.config = args.config or product_defaults[args.product]["config"]
+    args.template = args.template or product_defaults[args.product]["template"]
+    args.schema = args.schema or product_defaults[args.product]["schema"]
+
     try:
-        Log.info(f"Generating build environment for {args.layer}")
         config = load_config(Path(args.config), Path(args.schema))
         Log.success(f"Configuration loaded from {args.config}")
 
-        # Parse layer repository types
-        layer_repos = parse_layer_repos(args.layer_repos)
-        
-        # Apply layer-specific repository settings to config
-        for layer_name in ENV_PREFIX:
-            if layer_name in layer_repos:
-                if layer_name not in config['layers']:
-                    config['layers'][layer_name] = {}
-                config['layers'][layer_name]['repository-type'] = layer_repos[layer_name]
-                Log.info(f"Setting {layer_name} IPK package source repository type to: {layer_repos[layer_name]}")
-            else:
-                # Set default if not specified
-                if 'repository-type' not in config['layers'][layer_name]:
-                    config['layers'][layer_name]['repository-type'] = config['repository']['type']
+        if args.product == "rdkv":
+            generate_rdkv_build_env(args, config)
+        elif args.product == "rdkb":
+            generate_rdkb_build_env(args, config)
 
-        # Create ipk directory
-        # This must be done before the container is ever started
-        ipk_directory =  config['build']['ipk-dir']
-        dir_path = os.path.expandvars(ipk_directory)
-        os.makedirs(dir_path, exist_ok=True)
-
-        # Render the template
-        template = Template(filename=args.template)
-        build_env = template.render(
-            timestamp=datetime.now(timezone.utc),
-            target_layer=args.layer,
-            target_branch=args.branch,
-            env_prefix=ENV_PREFIX,
-            **config,
-        )
-        print(build_env)
     except KeyboardInterrupt:
         Log.warning("\nSetup interrupted by user")
         sys.exit(130)
+
     except Exception as error:
         Log.error(f"Unexpected error: {error}")
         sys.exit(1)
-
 
 if __name__ == "__main__":
     main()

@@ -24,15 +24,19 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m'
 
+DEFAULT_PRODUCT="rdkv"
+DEFAULT_BUILD_TARGET="bpi-r4-broadband"
 DEFAULT_TARGET="raspberrypi"
 DEFAULT_LAYER="vendor"
 DEFAULT_BRANCH="develop"
 IMAGE_NAME="rdk-layer-builder"
 CONTAINER_NAME="${CONTAINER_NAME:-rdk-layer-builder}"
+PRODUCT="$DEFAULT_PRODUCT"
 
 # CLI variables
 LAYER=""
 LAYER_REPOS=""
+BUILD_TARGET=""
 
 print_info() {
     echo -e "${BLUE}[INFO]${NC} $1"
@@ -75,51 +79,78 @@ Usage: $0 [OPTIONS] <command>
 
 Commands:
     create_image      Create the RDK Layer Builder Docker Image
-    setup             Runs generate-rdk-build-env to create RDK layer build config: build.env (runs outside container)
-    run               Run the RDK Layer Build Process (runs inside container using build.env from setup step)
-    run dependency    Generate dependency graph instead of building (inside container)
-    run bolt-package  Build/sign Bolt package only
-    sync              Sync the configured layer without building (inside container)
+    setup             Generate build.env using generate-rdk-build-env
+    run               Run the RDK build process using build.env
+    run dependency    Generate dependency graph instead of building
+    sync              Sync the configured source without building
     shell             Drop into a shell in a container instance
     help              Show this help
 
 Options:
-    -l, --layer LAYER                  Specify the layer to build (oss/vendor/middleware/application/image-assembler)
-    -b, --branch BRANCH                Specify the manifest branch or tag (default: develop)
-    --include-bolt-package             To include bolt packages in IA build (only applicable for image-assembler layer)
-    --genBoltPackages                  Bolt package build and signing with engineering certs/keys
-    --bolt-pkg-script-branch           Specify branch of bolt-pkg-script repo to build factory apps from (default: develop)
+    -P, --product PRODUCT            Product type (rdkv|rdkb)
+    -b, --branch BRANCH              Manifest branch or tag
+
+RDK-V Options:
+    -l, --layer LAYER                Layer to build
+                                     (oss/vendor/middleware/application/image-assembler)
+
+    -r, --layer-repos REPOS          Repository type for layers
+                                     (e.g. oss:remote,vendor:local)
+
+    --include-bolt-package           Include bolt packages in IA build
+    --genBoltPackages                Build/sign bolt packages
+    --bolt-pkg-script-branch BRANCH  Branch of bolt-pkg-script repo
+
+RDK-B Options:
+    -t, --build-target TARGET        Build target defined in config-rdkb.yaml
+                                     (e.g. bpi-r4-broadband, bpi-r4-easymesh-controller, bpi-r4-easymesh-extender, bpi-r4-broadband-wifiagent)
 
 Examples:
+
     ---------------------------------------------------------
     Create Docker Image (run once or when Dockerfile changes)
     ---------------------------------------------------------
-    $0 create_image 
-
-    -----------
-    Layer Setup
-    -----------
-    $0 setup -l vendor -b develop                                   # Build vendor layer with develop branch
-    $0 setup -l middleware -b develop                               # Build middleware layer with develop branch
-    $0 setup -l image-assembler -b develop                          # Build image assembler layer with develop branch (no bolt apps)
-    $0 setup -l image-assembler -b develop --include-bolt-package   # include default bolt applications in IA build
+        $0 create_image
     
-    ----------------------------------------------------------------------
-    Bolt Application configuration for IA layer (can be local file or URL)
-    ----------------------------------------------------------------------
-    $0 setup -l image-assembler -b <branch> --include-bolt-package --boltappconfig https://<abc.json> 
-    $0 setup -l image-assembler -b <branch> --include-bolt-package --boltappconfig <path>/factory-app-version.json 
+    ---------------------------------------------------------
+    RDK-V Setup
+    ---------------------------------------------------------
+        $0 setup -l vendor -b develop                                   # Build vendor layer with develop branch
+        $0 setup -l middleware -b develop                               # Build middleware layer with develop branch
+        $0 setup -l image-assembler -b develop                          # Build image assembler layer with develop branch (no bolt apps)
+        $0 setup -l image-assembler -b develop --include-bolt-package   # include default bolt applications in IA build
+        
+        ----------------------------------------------------------------------
+        Bolt Application configuration for IA layer (can be local file or URL)
+        ----------------------------------------------------------------------
+        $0 setup -l image-assembler -b <branch> --include-bolt-package --boltappconfig https://<abc.json> 
+        $0 setup -l image-assembler -b <branch> --include-bolt-package --boltappconfig <path>/factory-app-version.json 
     
-    -----------
-    Layer Build
-    -----------
-    $0 run              # Run build process (uses build.env generated from setup step)
-  
-    ----------------------------------------
-    Build and Sign Factory Bolt Applications
-    ----------------------------------------
-    $0 setup --genBoltPackages --bolt-pkg-script-branch <branch>  
-    $0 run bolt-package 
+        ---------------------------------------------------------
+        Build and Sign Factory Bolt Applications
+        ---------------------------------------------------------
+        $0 setup --genBoltPackages --bolt-pkg-script-branch <branch>
+    
+        $0 run bolt-package
+    	
+    ---------------------------------------------------------
+    RDK-B Setup
+    ---------------------------------------------------------
+        $0 setup -p rdkb -t bpi-r4-broadband -b rdk8-1.0.0
+    
+        $0 setup -p rdkb -t bpi-r4-easymesh-controller -b rdk8-1.0.0
+    
+        $0 setup -p rdkb -t bpi-r4-easymesh-extender -b rdk8-1.0.0
+    
+    ---------------------------------------------------------
+    Build
+    ---------------------------------------------------------
+        $0 run
+    
+    ---------------------------------------------------------
+    Generate Dependency Graph
+    ---------------------------------------------------------
+        $0 run dependency
 
 EOF
 }
@@ -146,7 +177,7 @@ check_local_ipk_available() {
     local ipk_path=""
 
     # Read config to get the ipk directory path
-    local ipk_dir=$(grep "ipk-dir:" config.yaml | awk -F': ' '{print $2}' | tr -d '"' | envsubst)
+    local ipk_dir=$(grep "ipk-dir:" config-rdkv.yaml | awk -F': ' '{print $2}' | tr -d '"' | envsubst)
 
     case "$layer" in
         "oss")
@@ -211,43 +242,8 @@ python_setup() {
 }
 
 # function: setup()
-setup() {
-    print_info "Running RDK setup (outside container)..."
+setup_rdkv() {
 
-    # setup python venv
-    if [ ! -f ".venv/bin/activate" ]; then
-        print_info "Creating Python virtual environment..."
-
-        # Clean up broken venv if it exists
-        if [ -d ".venv" ]; then
-            print_info "Removing broken virtual environment..."
-            rm -rf .venv
-        fi
-
-        # Ensure python3 exists
-        if ! command -v python3 >/dev/null 2>&1; then
-            print_info "python3 is not installed."
-            exit 1
-        fi
-
-        # Ensure venv module exists
-        if ! python3 -c "import venv" >/dev/null 2>&1; then
-            print_info "python3-venv is not installed. Run: apt install python3-venv."
-            exit 1
-        fi
-
-        # requires python3-venv
-        print_info "Creating python venv"
-        python3 -m venv .venv || {
-            print_error "Failed to create virtual environment."
-            exit 1
-        }
-    fi
-
-    # activate python venv
-    . .venv/bin/activate
-    python_setup
-    
     if [ "$GEN_BOLT_PACKAGES" = "true" ]; then
 
         print_info "Generating build.env for Bolt package build..."
@@ -310,15 +306,82 @@ setup() {
     fi
 
     # Generate build.env
-    eval "./generate-rdk-build-env --layer $LAYER --branch "$REPO_MANIFEST_BRANCH" $layer_repos_arg > build.env"
-    
-    # deactivate python venv
-    deactivate
+    eval "./generate-rdk-build-env --product rdkv --layer $LAYER --branch "$REPO_MANIFEST_BRANCH" $layer_repos_arg > build.env"
 
-    print_success "Setup completed for $LAYER layer"
- 
+    print_success "Setup completed for RDK-V layer: $LAYER"
 }
 
+
+setup_rdkb() {
+
+    # Get layer if not provided via CLI
+    if [ -z "$BUILD_TARGET" ]; then
+        get_input "Enter build target to build(bpi-r4-broadband/bpi-r4-easymesh-controller/bpi-r4-easymesh-extender/bpi-r4-broadband-wifiagent)" "$DEFAULT_BUILD_TARGET" "BUILD_TARGET"
+    fi
+
+    # Get layer if not provided via CLI
+    if [ -z "$REPO_MANIFEST_BRANCH" ]; then
+        get_input "Enter branch to build (rdk8-1.0.0, feature, hotfix, tags)" "rdk8-1.0.0" "REPO_MANIFEST_BRANCH"
+    fi
+
+    eval "./generate-rdk-build-env --product rdkb --build-target $BUILD_TARGET --branch "$REPO_MANIFEST_BRANCH"  > build.env"
+
+    print_success "Setup completed for RDK-B target: $BUILD_TARGET"
+}
+
+setup() {
+    print_info "Running RDK setup (outside container)..."
+
+    # setup python venv
+    if [ ! -f ".venv/bin/activate" ]; then
+        print_info "Creating Python virtual environment..."
+
+        # Clean up broken venv if it exists
+        if [ -d ".venv" ]; then
+            print_info "Removing broken virtual environment..."
+            rm -rf .venv
+        fi
+
+        # Ensure python3 exists
+        if ! command -v python3 >/dev/null 2>&1; then
+            print_info "python3 is not installed."
+            exit 1
+        fi
+
+        # Ensure venv module exists
+        if ! python3 -c "import venv" >/dev/null 2>&1; then
+            print_info "python3-venv is not installed. Run: apt install python3-venv."
+            exit 1
+        fi
+
+        # requires python3-venv
+        print_info "Creating python venv"
+        python3 -m venv .venv || {
+            print_error "Failed to create virtual environment."
+            exit 1
+        }
+    fi
+
+    # activate python venv
+    . .venv/bin/activate
+    python_setup
+
+    case "$PRODUCT" in
+        rdkv)
+            setup_rdkv
+            ;;
+        rdkb)
+            setup_rdkb
+            ;;
+        *)
+            print_error "Unsupported platform: $PRODUCT"
+            deactivate
+            exit 1
+            ;;
+    esac
+
+    deactivate
+}
 
 docker_run_command() {
     local command="$1"
@@ -367,6 +430,8 @@ docker_run_command() {
         -e REPO_MANIFEST_BRANCH="${REPO_MANIFEST_BRANCH:-}" \
         -e MANIFEST_FILE="${MANIFEST_FILE:-}" \
         -e LAYER="${LAYER:-}" \
+	-e PRODUCT="${PRODUCT:-}" \
+	-e BUILD_TARGET="${BUILD_TARGET:-}" \
         --platform linux/amd64 \
         "$IMAGE_NAME" "$command"
 }
@@ -408,10 +473,18 @@ while [[ $# -gt 0 ]]; do
             COMMAND="$1"
             shift
             ;;
+        -p|--product)
+	    PRODUCT="$2"
+	    shift 2
+	    ;;	    
         -l|--layer)
             LAYER="$2"
             shift 2
             ;;
+        -t|--build-target)
+            BUILD_TARGET="$2"
+            shift 2
+            ;;	   
         -b|--branch)
             REPO_MANIFEST_BRANCH="$2"
             shift 2
