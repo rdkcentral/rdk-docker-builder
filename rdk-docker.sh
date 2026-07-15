@@ -419,7 +419,7 @@ docker_run_command() {
         docker_opts="--rm --name $CONTAINER_NAME --user $user_id:$group_id"
     fi
 
-    docker run $docker_opts \
+    docker run -it $docker_opts \
         -v "$workspace:/home/rdk/workspace" \
         -v "$HOME/.ssh:/home/rdk/.ssh:ro" \
         -v "$HOME/.gitconfig:/home/rdk/.gitconfig:ro" \
