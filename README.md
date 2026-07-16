@@ -38,14 +38,21 @@
 
 ## Introduction
 
-RDK Docker Builder is a RDK Yocto development environment for building RDK-E RPI OSS, VENDOR, MIDDLEWARE, APPLICATION and IMAGE ASSEMBLER Raspberry PI 4 Layer Images. It can also be used to build the RDK8 factory firebolt applications (base bolt, wpe and reference ui). 
+RDK Docker Builder is a RDK Yocto development environment for building RDK Broadband and Video Reference Platforms:
+- RDK Broadband Banana Pi Gateway, EasyMesh Controller, EasyMesh Extender and CcspWifiAgent Gateway profiles
+- RDK Video RPI OSS, VENDOR, MIDDLEWARE, APPLICATION and IMAGE ASSEMBLER Raspberry PI 4 Layer Images
+- RDK8 factory firebolt applications (base bolt, wpe and reference ui)
 
+### Broadband
+This docker can be used to build [RDK8](https://wiki.rdkcentral.com/spaces/RDK/pages/495157272/RDK8+Broadband+Release+Notes) and any active branch or tag for the Banana Pi platform.
+
+### Video
 This Docker can be used to build the [RDK7](https://wiki.rdkcentral.com/spaces/RDK/pages/407524261/RDK7+Release+Notes) and [RDK8](https://wiki.rdkcentral.com/spaces/RDK/pages/476317896/RDK8+Release+Notes) releases and any active branch or tag for the different rdk video layers.
 
-It is assumed the user is familiar with the RDK-E Layered Architecture. If not please see the latest RDK-E release notes for an overview:
+It is assumed the user is familiar with the RDK Video Layered Architecture. If not please see the latest RDK Video release notes for an overview:
 [RDK-E Code Releases](https://wiki.rdkcentral.com/spaces/CMF/pages/414065624/RDK-E+Video+Code+Releases)
 
-The docker container image is an Ubuntu 20.04 image. [RDK7](https://wiki.rdkcentral.com/spaces/RDK/pages/407524261/RDK7+Release+Notes) and [RDK8](https://wiki.rdkcentral.com/spaces/RDK/pages/476317896/RDK8+Release+Notes) are based on Yocto Version 4 Kirkstone. 
+The docker container image is an Ubuntu 20.04 image. [RDK7 Video](https://wiki.rdkcentral.com/spaces/RDK/pages/407524261/RDK7+Release+Notes) and [RDK8 Video](https://wiki.rdkcentral.com/spaces/RDK/pages/476317896/RDK8+Release+Notes) and [RDK8 Broadband](https://wiki.rdkcentral.com/spaces/RDK/pages/495157272/RDK8+Broadband+Release+Notes) are based on Yocto Version 4 Kirkstone. 
 
 ---
 ## Prerequisites
@@ -57,7 +64,7 @@ The following should be installed on your host system
 - [Python 3](https://www.python.org/downloads/)
 - [Python venv](https://docs.python.org/3/library/venv.html) 
 
-### Storage Space
+### Video Storage Space
 You will need sufficient storage space on the host filesystem to perform the builds and store the IPK's generated. The IPK's can be stored on a local or a remotely mounted filesystem. Estimated storage requirements per IPK Feed and Layer Builds are as follows:
 
 **RDK 7** 
@@ -86,7 +93,62 @@ This docker setup has been tested on:
 - Ubuntu Noble 24.04 with Python 3.12.3
 
 ---
-## Quick Start
+## Quick Start Broadband
+
+### Create the RDK Docker Builder Container Image
+```bash
+cd <WORKSPACE>
+
+# clone the docker repo
+git clone https://github.com/rdkcentral/rdk-docker-builder.git
+
+cd rdk-docker-builder
+
+# create the docker image
+./rdk-docker.sh create_image
+```
+
+### Building a Banani Pi Platform Layer
+```bash
+# configure the broadband build environment 
+./rdk-docker.sh setup -p rdkb -t <build target> -b <manifest branch or tag>
+
+# build the banana pi broadband platform 
+./rdk-docker.sh run
+```
+
+The source code and build output for the layer will be stored in a `broadband/<manifest branch>/` directory within your git clone, e.g. for a Banana PI Gateway Build using the kirkstone manifest:
+```bash
+<WORKSPACE>/rdk-docker-builder/broadband/kirkstone/bpi-r4-broadband
+
+ls <WORKSPACE>/rdk-docker-builder/broadband/kirkstone/bpi-r4-broadband
+build-bananapi4-rdk-broadband # build output directory
+downloads                     # build downloads directory
+sstate-cache                  # build sstate cache directory
+*                             # source code and meta layers
+```
+
+### RDK-8 Broadband Build Commands
+```bash
+# Banana Pi R4 Gateway Profile
+./rdk-docker.sh setup -p rdkb -t bpi-r4-broadband -b rdk8-1.0.0
+./rdk-docker.sh run
+
+# Banana Pi R4 EasyMesh Controller Profile
+./rdk-docker.sh setup -p rdkb -t bpi-r4-easymesh-controller -b rdk8-1.0.0
+./rdk-docker.sh run
+
+# Banana Pi R4 EasyMesh Controller Profile
+./rdk-docker.sh setup -p rdkb -t bpi-r4-easymesh-extender -b rdk8-1.0.0
+./rdk-docker.sh run
+
+# Banana Pi R4 CcspWifiAgent Gateway Profile
+./rdk-docker.sh setup -p rdkb -t bpi-r4-broadband-wifiagent -b rdk8-1.0.0
+./rdk-docker.sh run
+```
+
+---
+## Quick Start Video
 
 ### Configure IPK Storage Location
 Before creating your RDK Layer Docker Builder Image you will need to identify a location to store the IPK's created by the different RDK Layer Builds. This location needs to have enough storage space to hold the IPK's. Once identified you then need to create a softlink from your $HOME directory to this IPK location as follows:
@@ -180,22 +242,19 @@ cd <WORKSPACE>/rdk-docker-builder/
 ```
 For RDK8 the default signed bolt applications are as per https://osspackages.code.rdkcentral.com/apps/bolt/1.0.3/factory_app_version.json 
 
-## IPK Package Feed 
+### IPK Package Feed 
 The IPK Packages Feed for the layer will be stored in `$HOME/ipks`, please refer to the diagrams in the next section for IPK Feed output directory structure.
 
----
-## RDK Docker Builder Structure
+
+### RDK Docker Builder Structure for Video Builds
 **RDK7**
 ![RDK Docker Builder Overview](assets/rdk-docker-builder.jpg)
 
----
 
 **RDK8**
 ![RDK Docker Builder Overview](assets/rdk-docker-builder-rdk8.jpg)
 
----
-
-## Build the RDK Layer and Generate the IPK's
+## Video: Build the RDK Layer and Generate the IPK's
 
 There are two phases to the layer build process 
 - *setup*
@@ -208,7 +267,7 @@ There are two phases to the layer build process
 
 ---
 
-## Using RDK Docker Build with Bolt Applications
+## Video: Using RDK Docker Build with Bolt Applications
 RDK8 introduces a modern, decoupled application framework that is a significant evolution from the RDK7 model. Applications in RDK8 are no longer tightly bound to the firmware image and are instead delivered as platform‑agnostic BOLT packages, enabling greater flexibility, faster iteration, and independent upgrades.
 
 For a detailed explanation of the RDK8 application architecture, packaging model, and migration differences from RDK7, refer to: [Applications on RDK8](https://wiki.rdkcentral.com/spaces/RDK/pages/480904291/Applications+on+RDK8)
@@ -294,6 +353,11 @@ Modifying the settings in the factory-app-version.json file will be automated in
 
 ## Usage Notes
 
+### Broadband
+- You must use `-p rdkb` when running `./rdk-docker.sh setup`
+- If you want to build a different target profile you must re-run `./rdk-docker.sh setup` before running `./rdk-docker.sh run`
+
+### Video
 - You must build the layers in order 
     - RDK7: OSS, VENDOR, MIDDLEWARE, APPLICATION, IMAGE ASSEMBLER
     - RDK8: VENDOR, MIDDLEWARE, IMAGE ASSEMBLER
@@ -301,7 +365,7 @@ Modifying the settings in the factory-app-version.json file will be automated in
 - if the branch name has a `/` it will be replaced with `-` on the filesystem e.g. `feature/test-branch` will be `feature-test-branch`
 - If you wish to override the default versions of IPK used for a layer you must set them explicitly before you do the *setup* phase
 
-### IPK Versions
+### Video IPK Versions
 
 The yocto layer build uses the DEFAULT IPK versions from the `<layer>.inc` configuration files.
 
@@ -333,6 +397,12 @@ export MIDDLEWARE_OSS_IPK_PATH="${HOME}/ipks/rdk-arm64-oss-middleware/raspberryp
 All build output for your layer is accessible from your local filesystem, i.e. you do not need to have the container running to view logs and retrieve images.
 The layer build output available in your clone in the following location.
 
+*Broadband:*
+```
+<WORKSPACE>/rdk-docker-builder/broadband/<manifest branch or tag>/<platform>/build-bananapi4-rdk-broadband
+```
+
+*Video:*
 ```
 <WORKSPACE>/rdk-docker-builder/<manifest branch or tag>/<layerName>-layer/build-raspberrypi4-64-rdke
 ```
@@ -341,6 +411,12 @@ The layer build output available in your clone in the following location.
 All source code changes in your layer can be made on your local filesystem, i.e. you do not need to have the container running to make changes.
 The layer source code is available in your clone in the following location.
 
+*Broadband:*
+```
+<WORKSPACE>/rdk-docker-builder/broadband/<manifest branch or tag>/<platform>/
+```
+
+*Video:*
 ```
 <WORKSPACE>/rdk-docker-builder/<branch or tag>/<layerName>-layer/rdke
 ```
@@ -354,7 +430,7 @@ If you wish to work in the container environment in interactive mode simply run
 ### Docker Runtime Info
 - The docker runtime user is `rdk` and home directory is `/home/rdk`
 - The `<WORKSPACE>/rdk-docker-build` directory is mounted in the following location `/home/rdk/workspace`
-- The external IPK location is mounted in the following location `/home/rdk/ipks` which maps to `${HOME}/ipks`
+- For Video the external IPK location is mounted in the following location `/home/rdk/ipks` which maps to `${HOME}/ipks`
 
 ### Some Useful Docker Commands
 ```bash
@@ -370,7 +446,7 @@ docker rmi -f rdk-layer-builder
 # get a shell prompt on a running container
 docker exec -it <container_id_or_name> /bin/bash
 ```
-### Using Remote Versus Local IPK's
+### Video: Using Remote Versus Local IPK's
 ```
 The current release of rdk-docker-builder does not support using IPK's from a remote location (e.g. artifactory, http server)
 
@@ -379,12 +455,5 @@ This will be supported in the next version due in 2026 Q3 timeframe.
 
 ### Running multiple docker builds at same time
 Each time you call `./rdk-docker.sh run` it creates a new container using the date and time so each layer build will run in its own container, however running multiple builds at the same time may impact on performance.
-
-### Supported Layers
-- **oss**: Open Source Software Layer
-- **vendor**: Vendor Layer
-- **middleware**: Middleware Layer
-- **application**: Application Layer
-- **image-assembler**: Image Assembly Layer (Final Image)
 
 ---
