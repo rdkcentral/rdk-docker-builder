@@ -141,6 +141,8 @@ Examples:
         $0 setup -p rdkb -t bpi-r4-easymesh-controller -b rdk8-1.0.0
     
         $0 setup -p rdkb -t bpi-r4-easymesh-extender -b rdk8-1.0.0
+
+        $0 setup -p rdkb -t bpi-r4-broadband-wifiagent -b rdk8-1.0.0
     
     ---------------------------------------------------------
     Build
