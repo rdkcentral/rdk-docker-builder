@@ -167,7 +167,7 @@ kirkstone whitelist.inc
 > The BL2 and FIP binaries for kernel-6.6 aren't in the downloads directory. Copy these binaries into the directory and then restart the build. You can find instructions for creating the necessary binaries on the RDK-B Code Releases page: (https://wiki.rdkcentral.com/display/CMF/RDK-B+Code+Releases)
 ******
 ```
-Please see the following [instructions](https://wiki.rdkcentral.com/spaces/RDK/pages/354648448/SD+Monolitic+image+build+and+flashing+steps+for+BPI+R4.#SDMonoliticimagebuildandflashingstepsforBPIR4.-Buildingbl2.imgandfip.binincaseofnothavingaccesstoartifactoryrepository) for building the banana pi BL2 and FIP binaries, once built copy them to the `<broadband/branch/bpi-r4-broadband>/downloads` directory and then re-run `rdk-docker.sh run`
+Please see the following [instructions](https://wiki.rdkcentral.com/spaces/RDK/pages/354648448/SD+Monolitic+image+build+and+flashing+steps+for+BPI+R4.#SDMonoliticimagebuildandflashingstepsforBPIR4.-Buildingbl2.imgandfip.binincaseofnothavingaccesstoartifactoryrepository) for building the banana pi BL2 and FIP binaries, once built copy them to the `broadband/<branch>/bpi-r4-broadband/downloads` directory and then re-run `rdk-docker.sh run`
 
 If you have access to RDKM Artifactory you can also get them as follows:
 ```
