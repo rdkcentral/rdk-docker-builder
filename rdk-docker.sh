@@ -136,13 +136,10 @@ Examples:
     ---------------------------------------------------------
     RDK-B Setup
     ---------------------------------------------------------
-        $0 setup -p rdkb -t bpi-r4-broadband -b rdk8-1.0.0
-    
-        $0 setup -p rdkb -t bpi-r4-easymesh-controller -b rdk8-1.0.0
-    
-        $0 setup -p rdkb -t bpi-r4-easymesh-extender -b rdk8-1.0.0
-
-        $0 setup -p rdkb -t bpi-r4-broadband-wifiagent -b rdk8-1.0.0
+        $0 setup -p rdkb -t bpi-r4-broadband -b kirkstone
+        $0 setup -p rdkb -t bpi-r4-easymesh-controller -b kirkstone
+        $0 setup -p rdkb -t bpi-r4-easymesh-extender -b kirkstone
+        $0 setup -p rdkb -t bpi-r4-broadband-wifiagent -b kirkstone
     
     ---------------------------------------------------------
     Build
