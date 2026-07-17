@@ -147,6 +147,32 @@ sstate-cache                  # build sstate cache directory
 ./rdk-docker.sh run
 ```
 
+### Banana Pi Firmware
+The first time you build you are likely to encounter this message
+```
+Manifest Name = rdkb-bpi-extsrc.xml
+kirkstone tune-cortexa53.inc
+kirkstone whitelist.inc
+**********************************************************************
+> Missing files are preventing the build from starting:
+> The BL2 and FIP binaries for kernel-6.6 aren't in the downloads directory. Copy these binaries into the directory and then restart the build. You can find instructions for creating the necessary binaries on the RDK-B Code Releases page: (https://wiki.rdkcentral.com/display/CMF/RDK-B+Code+Releases)
+******
+```
+Please see the following [instructions](https://wiki.rdkcentral.com/spaces/RDK/pages/354648448/SD+Monolitic+image+build+and+flashing+steps+for+BPI+R4.#SDMonoliticimagebuildandflashingstepsforBPIR4.-Buildingbl2.imgandfip.binincaseofnothavingaccesstoartifactoryrepository) for building the banana pi BL2 and FIP binaries, once built copy them to the `<broadband/branch/bpi-r4-broadband>/downloads` directory and then re-run `rdk-docker.sh run`
+
+If you have access to RDKM Artifactory you can also get them as follows:
+```
+wget https://artifactory.rdkcentral.com/artifactory/RDKB-Platform/BPI-R4/uboot-2025.01/bpi-r4_sdmmc_fip_6-6.bin
+wget https://artifactory.rdkcentral.com/artifactory/RDKB-Platform/BPI-R4/uboot-2025.01/bpi-r4_sdmmc_bl2_6-6.img
+wget https://artifactory.rdkcentral.com/artifactory/RDKB-Platform/BPI-R4/uboot-2025.01/bpi-r4_sdmmc_fip_B_6-6.bin
+wget https://artifactory.rdkcentral.com/artifactory/RDKB-Platform/BPI-R4/uboot-2025.01/bpi-r4_sdmmc_bl2_B_6-6.img
+```
+
+We hope to include these as part of the docker image very soon, first we need to ensure we can host these binaries publicly.
+
+### RDK Docker Builder Structure for Video Builds
+![RDK-B Docker Builder Overview](assets/rdk-docker-builder-rdkb.jpg)
+
 ---
 ## Quick Start Video
 
