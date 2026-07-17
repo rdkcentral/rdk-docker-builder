@@ -11,10 +11,10 @@
   * [Systems Tested](#systems-tested)
 - [Quick Start Broadband](#quick-start-broadband)
   * [Create the RDK Docker Builder Container Image](#create-the-rdk-docker-builder-container-image)
-  * [Building a Banani Pi Platform Layer](#building-a-banani-pi-platform-layer)
+  * [Building a Banana Pi Platform Layer](#building-a-banana-pi-platform-layer)
   * [RDK-8 Broadband Build Commands](#rdk-8-broadband-build-commands)
   * [Banana Pi Firmware](#banana-pi-firmware)
-  * [RDK Docker Builder Structure for Video Builds](#rdk-docker-builder-structure-for-video-builds)
+  * [RDK Docker Builder Structure for Broadband Builds](#rdk-docker-builder-structure-for-broadband-builds)
 - [Quick Start Video](#quick-start-video)
   * [Configure IPK Storage Location](#configure-ipk-storage-location)
   * [Create the RDK Docker Builder Container Image](#create-the-rdk-docker-builder-container-image-1)
@@ -22,7 +22,7 @@
   * [RDK7 Build Commands](#rdk7-build-commands)
   * [RDK8 Build Commands](#rdk8-build-commands)
   * [IPK Package Feed](#ipk-package-feed)
-  * [RDK Docker Builder Structure for Video Builds](#rdk-docker-builder-structure-for-video-builds-1)
+  * [RDK Docker Builder Structure for Video Builds](#rdk-docker-builder-structure-for-video-builds)
 - [Video: Build the RDK Layer and Generate the IPK's](#video-build-the-rdk-layer-and-generate-the-ipks)
 - [Video: Using RDK Docker Build with Bolt Applications](#video-using-rdk-docker-build-with-bolt-applications)
   * [Create Image Assembler with default Factory Bolt Applications](#create-image-assembler-with-default-factory-bolt-applications)
@@ -117,7 +117,7 @@ cd rdk-docker-builder
 ./rdk-docker.sh create_image
 ```
 
-### Building a Banani Pi Platform Layer
+### Building a Banana Pi Platform Layer
 ```bash
 # configure the broadband build environment 
 ./rdk-docker.sh setup -p rdkb -t <build target> -b <manifest branch or tag>
@@ -167,7 +167,7 @@ kirkstone whitelist.inc
 > The BL2 and FIP binaries for kernel-6.6 aren't in the downloads directory. Copy these binaries into the directory and then restart the build. You can find instructions for creating the necessary binaries on the RDK-B Code Releases page: (https://wiki.rdkcentral.com/display/CMF/RDK-B+Code+Releases)
 ******
 ```
-Please see the following [instructions](https://wiki.rdkcentral.com/spaces/RDK/pages/354648448/SD+Monolitic+image+build+and+flashing+steps+for+BPI+R4.#SDMonoliticimagebuildandflashingstepsforBPIR4.-Buildingbl2.imgandfip.binincaseofnothavingaccesstoartifactoryrepository) for building the banana pi BL2 and FIP binaries, once built copy them to the `broadband/<branch>/bpi-r4-broadband/downloads` directory and then re-run `rdk-docker.sh run`
+Please see the following [instructions](https://wiki.rdkcentral.com/spaces/RDK/pages/354648448/SD+Monolitic+image+build+and+flashing+steps+for+BPI+R4.#SDMonoliticimagebuildandflashingstepsforBPIR4.-Buildingbl2.imgandfip.binincaseofnothavingaccesstoartifactoryrepository) for building the Banana Pi BL2 and FIP binaries, once built copy them to the `broadband/<branch>/bpi-r4-broadband/downloads` directory and then re-run `./rdk-docker.sh run`
 
 If you have access to RDKM Artifactory you can also get them as follows:
 ```
@@ -179,7 +179,7 @@ wget https://artifactory.rdkcentral.com/artifactory/RDKB-Platform/BPI-R4/uboot-2
 
 We hope to include these as part of the docker image very soon, first we need to ensure we can host these binaries publicly.
 
-### RDK Docker Builder Structure for Video Builds
+### RDK Docker Builder Structure for Broadband Builds
 ![RDK-B Docker Builder Overview](assets/rdk-docker-builder-rdkb.jpg)
 
 ---
