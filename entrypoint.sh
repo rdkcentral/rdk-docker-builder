@@ -294,6 +294,23 @@ init_or_sync_target() {
     echo "build_target_dir: $build_target_dir"
     mkdir -p "$build_target_dir" && cd "$build_target_dir"
     init_or_sync
+
+    local downloads_dir="$build_target_dir/downloads"
+    mkdir -p "$downloads_dir"
+
+    echo "INFO: Downloading BPI firmware binaries into $downloads_dir"
+
+    wget -nv -nc -P "$downloads_dir" \
+        https://osspackages.code.rdkcentral.com/broadband/bpi/fw/bpi-r4_sdmmc_bl2.img \
+        https://osspackages.code.rdkcentral.com/broadband/bpi/fw/bpi-r4_sdmmc_bl2_6-6.img \
+        https://osspackages.code.rdkcentral.com/broadband/bpi/fw/bpi-r4_sdmmc_bl2_B.img \
+        https://osspackages.code.rdkcentral.com/broadband/bpi/fw/bpi-r4_sdmmc_bl2_B_6-6.img \
+        https://osspackages.code.rdkcentral.com/broadband/bpi/fw/bpi-r4_sdmmc_fip.bin \
+        https://osspackages.code.rdkcentral.com/broadband/bpi/fw/bpi-r4_sdmmc_fip_6-6.bin \
+        https://osspackages.code.rdkcentral.com/broadband/bpi/fw/bpi-r4_sdmmc_fip_B.bin \
+        https://osspackages.code.rdkcentral.com/broadband/bpi/fw/bpi-r4_sdmmc_fip_B_6-6.bin
+
+    echo "INFO: Download BPI firmware binaries completed"
 }
 
 ################################################################################
